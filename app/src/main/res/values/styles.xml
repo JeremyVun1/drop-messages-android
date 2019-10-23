@@ -1,11 +1,79 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="AppTheme" parent="Theme.AppCompat">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:fontFamily">@font/roboto</item>
     </style>
 
+    <style name="AppNameText" parent="@style/AppTheme">
+        <item name="android:fontFamily">@font/roboto_bold</item>
+        <item name="android:textColor">@color/colorPrimaryDark</item>
+        <item name="android:gravity">center_horizontal|top</item>
+        <item name="android:textSize">38sp</item>
+    </style>
+
+    <!-- Font sizes -->
+    <style name="RegularText" parent="@style/AppTheme">
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <style name="MediumText" parent="@style/AppTheme">
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="LargeText" parent="@style/AppTheme">
+        <item name="android:textSize">18sp</item>
+    </style>
+
+
+    <!-- Font colors -->
+    <style name="DarkHintText" parent="@style/RegularText">
+        <item name="android:textColor">@color/colorDarkHint</item>
+    </style>
+    <style name="LightHintText" parent="@style/RegularText">
+        <item name="android:textColor">@color/colorLightHint</item>
+    </style>
+
+
+    <style name="ButtonText" parent="@style/RegularText">
+        <item name="android:textColor">@color/colorWhiteText</item>
+    </style>
+    <style name="MediumButtonText" parent="@style/MediumText">
+        <item name="android:textColor">@color/colorWhiteText</item>
+    </style>
+
+
+    <style name="DarkText" parent="@style/RegularText">
+        <item name="android:textColor">@color/colorPrimaryDark</item>
+    </style>
+    <style name="LargeDarkText" parent="@style/LargeText">
+        <item name="android:textColor">@color/colorPrimaryDark</item>
+    </style>
+    <style name="RegularWhiteText" parent="@style/RegularText">
+        <item name="android:textColor">@color/colorWhiteText</item>
+    </style>
+    <style name="MediumWhiteText" parent="@style/MediumText">
+        <item name="android:textColor">@color/colorWhiteText</item>
+    </style>
+
+    <style name="MessageBodyText" parent="@style/RegularText">
+        <item name="android:textColor">@color/colorPrimaryDark</item>
+    </style>
+    <style name="MessageSubText" parent="@style/RegularText">
+        <item name="android:textColor">@color/colorLightSubText</item>
+    </style>
+    <style name="VotesText" parent="@style/MediumText">
+        <item name="android:fontFamily">@font/roboto_bold</item>
+        <item name="android:textColor">@color/colorLightHint</item>
+    </style>
+
+    <!-- TODO hook up with toolbar style -->
+    <style name="ToolBarTitle">
+        <item name="android:textSize">24sp</item>
+        <item name="android:textColor">@color/colorWhiteText</item>
+    </style>
 </resources>

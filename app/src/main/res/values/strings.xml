@@ -1,3 +1,34 @@
 <resources>
+    <!-- General -->
     <string name="app_name">drop-messages-android</string>
+    <string name="app_name_formatted">Drop Messages</string>
+    <string name="placeholder">Lorum Ipsum</string>
+
+    <!-- Signup -->
+    <string name="username_hint">Username…</string>
+    <string name="password_hint">Password…</string>
+    <string name="email_hint">Email…</string>
+    <string name="sign_up_button">SIGN UP</string>
+    <string name="sign_in_button">SIGN IN</string>
+    <string name="sign_in_option_label">ALREADY HAVE AN ACCOUNT?</string>
+
+    <!-- Action hints -->
+    <string name="pull_up_start_hint">Pull up to start!</string>
+    <string name="pull_down_return_hint">Pull down to go back</string>
+    <string name="pull_up_drops_hint">Pull up to see more drops</string>
+    <string name="pull_down_drops_hint">Pull down to see drop again</string>
+    <string name="pull_up_refresh_hint">Pull up to check for new drops</string>
+
+    <!-- Status texts -->
+    <string name="generic_loading">Loading…</string>
+    <string name="refresh_loading">Checking…</string>
+    <string name="drop_stack_empty">No more drops…</string>
+
+    <!-- Bottom nav bar button labels -->
+    <string name="top_drops_label">Top</string>
+    <string name="latest_drops_label">Latest</string>
+    <string name="create_drop_label">Create Drop</string>
+    <string name="random_drops_label">Random</string>
+    <string name="map_label">Map</string>
+    <string name="my_drops_label">My Drops</string>
 </resources>
