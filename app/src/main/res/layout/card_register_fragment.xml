@@ -1,73 +1,148 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/frame_card"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/ic_drop_card"
-    android:elevation="4dp">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:elevation="20dp"
+    android:stateListAnimator="@null">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:srcCompat="@drawable/ic_drop_card"
+        android:elevation="2dp"
+        android:background="@drawable/shadow"
+        android:stateListAnimator="@null"/>
+
+    <LinearLayout
         android:id="@+id/content_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:elevation="10dp"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:stateListAnimator="@null">
 
-        <TextView
-            android:id="@+id/tv_title"
-            style="@style/AppNameText"
-            android:layout_width="180dp"
+        <LinearLayout
+            android:id="@+id/action_hint_container"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="116dp"
-            android:text="@string/app_name_formatted"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:layout_marginTop="40dp"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/hint_action_scroll"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="-5dp"
+                android:backgroundTint="@color/colorPrimaryDark"
+                android:clickable="false"
+                android:elevation="50dp"
+                android:focusable="true"
+                android:scaleX="0.7"
+                android:scaleY="0.7"
+                android:src="@drawable/ic_arrow_down"
+                android:tint="#00B90000"
+                app:backgroundTint="@android:color/transparent" />
+
+            <TextView
+                android:id="@+id/tv_pull_up_hint"
+                style="@style/DarkHintText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/pull_down_return_hint" />
+        </LinearLayout>
 
         <ImageView
             android:id="@+id/img_logo"
-            android:layout_width="144dp"
-            android:layout_height="137dp"
-            android:layout_marginTop="32dp"
-            android:contentDescription="Logo"
-            android:src="@drawable/ic_drop_message_circle"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tv_title" />
-
-        <TextView
-            android:id="@+id/tv_pull_up_hint"
-            style="@style/DarkHintText"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:text="@string/pull_up_start_hint"
-            app:layout_constraintBottom_toTopOf="@+id/floatingActionButton2"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toStartOf="parent" />
+            android:layout_height="66dp"
+            android:contentDescription="@string/logo_content_desc"
+            android:scaleX="0.9"
+            android:scaleY="0.85"
+            android:src="@drawable/ic_drop_message" />
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/floatingActionButton2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="64dp"
-            android:backgroundTint="@color/colorPrimaryDark"
-            android:clickable="true"
-            android:elevation="4dp"
-            android:focusable="true"
-            android:scaleX="1.1"
-            android:scaleY="1.1"
-            android:src="@drawable/ic_arrow_up"
-            android:tint="#00B90000"
-            app:backgroundTint="@android:color/transparent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.498"
-            app:layout_constraintStart_toStartOf="parent"
-            app:maxImageSize="30dp" />
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tv_input_username"
+            android:layout_width="185dp"
+            android:layout_height="wrap_content">
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            <com.google.android.material.textfield.TextInputEditText
+                style="@style/LightHintText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/username_hint" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tv_input_password"
+            android:layout_width="185dp"
+            android:layout_height="wrap_content">
+
+            <com.google.android.material.textfield.TextInputEditText
+                style="@style/LightHintText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/password_hint" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tv_input_email"
+            android:layout_width="185dp"
+            android:layout_height="wrap_content">
+
+            <com.google.android.material.textfield.TextInputEditText
+                style="@style/LightHintText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/email_hint" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <Button
+            android:id="@+id/btn_signup"
+            style="@style/MediumButtonText"
+            android:layout_width="185dp"
+            android:layout_height="35dp"
+            android:background="@drawable/btn_rounded"
+            android:elevation="40dp"
+            android:text="@string/sign_up_button" />
+
+
+        <LinearLayout
+            android:id="@+id/signin_opt_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="65dp"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tv_signin_label"
+                style="@style/DarkHintText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/sign_in_option_label"
+                android:paddingRight="10dp"/>
+
+            <Button
+                android:id="@+id/btn_signin"
+                style="@style/ButtonText"
+                android:layout_width="60dp"
+                android:layout_height="25dp"
+                android:elevation="40dp"
+                android:background="@drawable/btn_rounded"
+                android:text="@string/sign_in_button" />
+        </LinearLayout>
+
+    </LinearLayout>
 
 </FrameLayout>

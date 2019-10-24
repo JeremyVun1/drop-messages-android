@@ -8,6 +8,9 @@
         <item name="colorAccent">@color/colorAccent</item>
         <item name="android:fontFamily">@font/roboto</item>
 
+        <item name="android:textColorHint">@color/colorLightHint</item>
+        <item name="colorControlNormal">@color/colorBlack</item>
+
         <!-- shadows -->
         <item name="android:ambientShadowAlpha">0.3</item>
         <item name="android:spotShadowAlpha">0.7</item>

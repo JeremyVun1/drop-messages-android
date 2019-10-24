@@ -140,7 +140,7 @@ class VerticalViewPager(context: Context, attrs: AttributeSet?): ViewPager(conte
                     page.elevation = 30f
                 }
 
-                page.alpha = (1+(position/3)) + 0.11f
+                page.alpha = (1+(position/3)) + 0.1f
 
                 page.translationX = page.width * -position
                 page.translationY = (position * page.height)
