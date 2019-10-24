@@ -31,4 +31,7 @@
     <string name="random_drops_label">Random</string>
     <string name="map_label">Map</string>
     <string name="my_drops_label">My Drops</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
