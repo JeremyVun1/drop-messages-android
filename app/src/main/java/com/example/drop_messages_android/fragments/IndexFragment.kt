@@ -77,7 +77,5 @@ class IndexFragment : Fragment() {
             repeatMode = ObjectAnimator.REVERSE
             repeatCount = ObjectAnimator.INFINITE
         }.start()
-
-
     }
 }

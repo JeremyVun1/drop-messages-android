@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:elevation="20dp"
+    android:stateListAnimator="@null">
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:srcCompat="@drawable/ic_drop_card"
+        android:elevation="2dp"
+        android:background="@drawable/shadow"
+        android:stateListAnimator="@null"/>
+
+    <LinearLayout
+        android:id="@+id/content_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:elevation="10dp"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:stateListAnimator="@null">
+
+        <ImageView
+            android:id="@+id/img_logo"
+            android:layout_width="wrap_content"
+            android:layout_height="66dp"
+            android:contentDescription="@string/logo_content_desc"
+
+            android:layout_marginTop="115dp"
+            android:scaleX="0.9"
+            android:scaleY="0.85"
+            android:src="@drawable/ic_drop_message" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tv_input_username"
+            android:layout_width="185dp"
+            android:layout_height="wrap_content">
+
+            <com.google.android.material.textfield.TextInputEditText
+                style="@style/LightHintText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/username_hint" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tv_input_password"
+            android:layout_width="185dp"
+            android:layout_height="wrap_content">
+
+            <com.google.android.material.textfield.TextInputEditText
+                style="@style/LightHintText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/password_hint" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <Button
+            android:id="@+id/btn_signin"
+            style="@style/MediumButtonText"
+            android:layout_width="185dp"
+            android:layout_height="35dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/btn_rounded"
+            android:elevation="40dp"
+            android:text="@string/sign_in_button" />
+
+
+        <LinearLayout
+            android:id="@+id/signin_opt_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="90dp"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tv_signin_label"
+                style="@style/DarkHintText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingRight="20dp"
+                android:text="@string/sign_up_option_label" />
+
+            <Button
+                android:id="@+id/btn_signup"
+                style="@style/ButtonText"
+                android:layout_width="60dp"
+                android:layout_height="25dp"
+                android:background="@drawable/btn_rounded"
+                android:elevation="40dp"
+                android:text="@string/sign_up_button" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</FrameLayout>

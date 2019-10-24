@@ -10,26 +10,41 @@ import com.android.volley.Response
 import com.android.volley.VolleyError
 import com.android.volley.toolbox.JsonObjectRequest
 import com.example.drop_messages_android.fragments.IndexFragment
+import com.example.drop_messages_android.fragments.LoginFragment
 import com.example.drop_messages_android.fragments.RegisterFragment
 import com.example.drop_messages_android.fragments.TestFragment
+import com.example.drop_messages_android.network.GetTokenModel
 import com.example.drop_messages_android.network.NetworkSingleton
 import com.example.drop_messages_android.network.SignUpModel
 import com.example.drop_messages_android.viewpager.VerticalPageAdapter
+import com.google.android.gms.auth.api.credentials.CredentialRequest
+import com.google.android.gms.auth.api.credentials.Credentials
+import com.google.android.gms.auth.api.credentials.IdentityProviders
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_user_front.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
-class MainActivity : AppCompatActivity(), RegisterFragment.OnSignUpUserListener {
+class UserFrontActivity : AppCompatActivity(), RegisterFragment.RegisterUserListener, LoginFragment.LoginUserListener {
 
     private var regFrag : RegisterFragment? = null
+    private var loginFrag : LoginFragment?= null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_user_front)
+        overridePendingTransition(0, 0)
+
+        val credentialsClient = Credentials.getClient(this)
+        val credentialRequest = CredentialRequest.Builder()
+            .setPasswordLoginSupported(true)
+            .setAccountTypes(IdentityProviders.GOOGLE, IdentityProviders.TWITTER)
+            .build()
+
+
 
         initialiseUI()
         //initTestUI()
@@ -37,30 +52,70 @@ class MainActivity : AppCompatActivity(), RegisterFragment.OnSignUpUserListener 
 
     private fun initialiseUI() {
         regFrag = RegisterFragment()
+        loginFrag = LoginFragment()
 
         val verticalPageAdapter = VerticalPageAdapter(
-            arrayOf(IndexFragment(), regFrag as Fragment),
+            arrayOf(IndexFragment(), regFrag as Fragment, loginFrag as Fragment),
             supportFragmentManager
         )
         fragment_container.adapter = verticalPageAdapter
         fragment_container.offscreenPageLimit = 10
     }
 
+    // login the user (get auth token and make a websocket connection)
+    private fun login(model: GetTokenModel) {
+        // do stuff
+    }
+
+
+    /////////////////////
+    // Fragment callbacks
+    /////////////////////
+    override fun navToSignIn() {
+        fragment_container.currentItem = 2
+    }
+
+    override fun navToSignUp() {
+        fragment_container.currentItem = 1
+        println("Nav to sign up ${fragment_container.currentItem}")
+    }
+
+    private fun login() {
+
+    }
+
+    override fun onSignIn(bundle: Bundle, errorListener: (err: GetTokenModel) -> Unit) {
+        CoroutineScope(IO).launch {
+            val model = GetTokenModel(bundle.getString("username") ?: "",
+                bundle.getString("password") ?: "")
+
+            credential = Credential.Builder()
+
+            println("Logging in as ${model}")
+            val url = resources.getString(R.string.get_token_url)
+
+            val gson = Gson()
+            val json = gson.toJson(model)
+
+
+        }
+    }
+
     // event listener for sign up fragment
     override fun onSignUpUser(bundle: Bundle, errorListener: (err: SignUpModel) -> Unit) {
         CoroutineScope(IO).launch {
-            val url = resources.getString(R.string.sign_up_url)
-
             val model = SignUpModel(bundle.getString("username") ?: "",
                 bundle.getString("password") ?: "",
                 bundle.getString("email") ?: "")
 
-            val json = Gson().toJson(model)
+            val url = resources.getString(R.string.sign_up_url)
+
+            val gson = Gson()
+            val json = gson.toJson(model)
 
             //make the post request
             PostRequest(url, json,
                 {
-                    val gson = Gson()
                     val response = gson.fromJson(it.toString(), JsonObject::class.java)
 
                     if (response.has("id")) {
@@ -100,7 +155,9 @@ class MainActivity : AppCompatActivity(), RegisterFragment.OnSignUpUserListener 
         NetworkSingleton.getInstance(this).addToRequestQueue(request)
     }
 
-    // for testing with colorful cards
+    /////////////////////
+    // TESTING
+    /////////////////////
     private fun initTestUI() {
         val fragA = TestFragment()
         val fragB = TestFragment()

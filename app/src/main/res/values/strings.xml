@@ -5,13 +5,15 @@
     <string name="placeholder">Lorum Ipsum</string>
     <string name="logo_content_desc">Drop Message Logo</string>
 
-    <!-- Signup -->
+    <!-- Sign up / Sign in -->
     <string name="username_hint"> Username…</string>
     <string name="password_hint"> Password…</string>
     <string name="email_hint">Email…</string>
     <string name="sign_up_button">SIGN UP</string>
     <string name="sign_in_button">SIGN IN</string>
     <string name="sign_in_option_label">ALREADY HAVE AN ACCOUNT?</string>
+    <string name="sign_up_option_label">DON\'T HAVE AN ACCOUNT?</string>
+
 
     <!-- Action hints -->
     <string name="pull_up_start_hint">Pull up to start!</string>
@@ -21,7 +23,7 @@
     <string name="pull_up_refresh_hint">Pull up to check for new drops</string>
 
     <!-- Status texts -->
-    <string name="generic_loading">Loading…</string>
+    <string name="generic_loading">Loading . . .</string>
     <string name="refresh_loading">Checking…</string>
     <string name="drop_stack_empty">No more drops…</string>
 
@@ -35,6 +37,6 @@
 
     <!-- API Urls -->
     <string name="sign_up_url">https://drop-messages.herokuapp.com/api/register/</string>
-    <string name="sign_in_url">https://drop-messages.herokuapp.com/api/token/</string>
+    <string name="get_token_url">https://drop-messages.herokuapp.com/api/token/</string>
     <string name="web_socket_url">wss://drop-messages.herokuapp.com/ws/</string>
 </resources>

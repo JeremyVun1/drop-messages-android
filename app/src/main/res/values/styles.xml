@@ -78,6 +78,10 @@
         <item name="android:textColor">@color/colorLightHint</item>
     </style>
 
+    <style name="MediumDarkText" parent="@style/MediumText">
+        <item name="android:textColor">@color/colorPrimary</item>
+    </style>
+
     <!-- TODO hook up with toolbar style -->
     <style name="ToolBarTitle">
         <item name="android:textSize">24sp</item>

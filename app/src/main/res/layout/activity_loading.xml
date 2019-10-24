@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/linearLayout2"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="center"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:orientation="vertical"
+    android:background="@color/colorWhite"
+    tools:context=".UserFrontActivity">
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:layout_gravity="center"
+        android:indeterminateDrawable="@drawable/custom_circle_progressbar" />
+
+    <ImageView
+        android:id="@+id/img_logo"
+        android:layout_width="wrap_content"
+        android:layout_height="80dp"
+        android:layout_gravity="center"
+        android:paddingBottom="15dp"
+        app:srcCompat="@drawable/ic_drop_message" />
+
+    <TextView
+        android:id="@+id/tv_loading"
+        style="@style/MediumDarkText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="70dp"
+        android:layout_marginLeft="10dp"
+        android:text="@string/generic_loading" />
+
+    <ImageView
+        android:id="@+id/img_white_cover"
+        android:layout_width="50dp"
+        android:layout_height="20dp"
+        android:layout_gravity="center"
+        android:layout_marginLeft="50dp"
+        android:layout_marginTop="70dp"
+        app:srcCompat="@drawable/img_rect_white" />
+
+</FrameLayout>
