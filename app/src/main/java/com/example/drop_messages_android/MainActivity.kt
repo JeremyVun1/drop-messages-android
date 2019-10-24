@@ -16,17 +16,24 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        initialiseUI()
+        //initialiseUI()
+        initTestUI()
     }
 
     private fun initialiseUI() {
 
         val indexFragment = IndexFragment()
         val registerFragment = RegisterFragment()
+        val registerFragmentB = RegisterFragment()
+        val registerFragmentC = RegisterFragment()
+        val registerFragmentD = RegisterFragment()
 
         val fragments = arrayOf(
             indexFragment,
-            registerFragment
+            registerFragment,
+            registerFragmentB,
+            registerFragmentC,
+            registerFragmentD
         )
 
         val vertPageAdapter = VerticalPageAdapter(
@@ -34,10 +41,12 @@ class MainActivity : AppCompatActivity() {
             supportFragmentManager
         )
         fragment_container.adapter = vertPageAdapter
-        fragment_container.elevation = 20f
+        //fragment_container.elevation = 20f
+        //fragment_container.pageMargin = -70
         fragment_container.offscreenPageLimit = 10
+    }
 
-        /*
+    private fun initTestUI() {
         val fragA = TestFragment()
         val fragB = TestFragment()
         val fragC = TestFragment()
@@ -56,10 +65,8 @@ class MainActivity : AppCompatActivity() {
         )
         // val cardPageAdapter = CardPageAdapter(this, data)
         fragment_container.adapter = verticalPageAdapter
-        fragment_container.elevation = 20f
+        //fragment_container.elevation = 20f
         //pager_container.setBackgroundColor(Color.RED)
         fragment_container.offscreenPageLimit = 10
-
-         */
     }
 }

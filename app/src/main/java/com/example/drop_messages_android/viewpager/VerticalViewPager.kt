@@ -5,6 +5,7 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import androidx.viewpager.widget.ViewPager
+import kotlinx.android.synthetic.main.card_test.view.*
 import kotlin.math.max
 import kotlin.math.min
 
@@ -45,6 +46,10 @@ class VerticalViewPager(context: Context, attrs: AttributeSet?): ViewPager(conte
 
         var start_mod = 0.04f
         var start_delta = STACK_MARGIN
+        var start_elevation = 10f
+        var curr_card_elevation = 10f
+        val elevation_step = 1.5f
+        var starting = true
 
         private fun pushTopStack(page: View, dir: Int) {
             for ((k, v) in pageState) {
@@ -54,11 +59,11 @@ class VerticalViewPager(context: Context, attrs: AttributeSet?): ViewPager(conte
                     var newY = 0f
                     if (dir == 1) {
                         newY = -0.90f + min(v.margin, MAX_MARGIN)
-                        k.elevation -= 1f
+                        k.elevation -= elevation_step
                     }
                     else {
                         newY = -0.90f + min(v.margin, MAX_MARGIN)
-                        k.elevation += 1f
+                        k.elevation += elevation_step
                     }
 
                     k.translationY = newY * page.height
@@ -74,12 +79,17 @@ class VerticalViewPager(context: Context, attrs: AttributeSet?): ViewPager(conte
                     var newY = 0f
                     if (dir == 1) {
                         newY = min(v.margin, MAX_MARGIN)
+                        if (starting)
+                            k.elevation += elevation_step + 0.5f
+                        k.elevation -= elevation_step
                     }
                     else {
                         newY = max(v.margin, 0f)
+                        k.elevation -= elevation_step
                     }
 
                     k.translationY = (-MAX_MARGIN + newY) * page.height
+                    //println("${page.tv_output.text} e: ${page.elevation}")
                 }
             }
         }
@@ -88,9 +98,11 @@ class VerticalViewPager(context: Context, attrs: AttributeSet?): ViewPager(conte
         override fun transformPage(page: View, position: Float) {
             if (!pageState.containsKey(page)) {
                 pageState[page] = PageState(PageViewState.CURRENT, 0f)
+                page.elevation = curr_card_elevation
             } else {
                 start_delta = 0f
                 start_mod = 0.05f
+                starting = false
             }
 
             // Card is now at the top
@@ -144,7 +156,7 @@ class VerticalViewPager(context: Context, attrs: AttributeSet?): ViewPager(conte
                 if (ps!!.state == PageViewState.TOP_TRANSITION) {
                     ps.state = PageViewState.CURRENT
                     ps.margin = 0f
-                    page.elevation = 80f
+                    page.elevation = curr_card_elevation
                 }
 
                 // came from bottom stack
@@ -152,7 +164,7 @@ class VerticalViewPager(context: Context, attrs: AttributeSet?): ViewPager(conte
                     // push bottom stack cards up
                     ps.state = PageViewState.CURRENT
                     ps.margin = 0f
-                    page.elevation = 80f
+                    page.elevation = curr_card_elevation
                     pushBotStack(page, -1)
                 }
                 page.translationX = 0f
@@ -167,7 +179,7 @@ class VerticalViewPager(context: Context, attrs: AttributeSet?): ViewPager(conte
                 if (ps!!.state == PageViewState.CURRENT) {
                     ps.state = PageViewState.BOTTOM
                     ps.margin = MAX_MARGIN - start_mod
-                    page.elevation = 0f
+                    page.elevation = 8f
                     start_mod -= 0.01f
 
                     pushBotStack(page, 1)

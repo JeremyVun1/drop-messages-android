@@ -4,7 +4,8 @@
     <item>
         <shape>
             <solid android:color="@color/colorPrimary"/>
-            <corners android:radius="6dp"/>
+            <corners android:radius="8dp"/>
+            <padding android:bottom="70dp"/>
         </shape>
     </item>
 
@@ -59,7 +60,6 @@
     <item>
         <shape android:shape="rectangle">
             <solid android:color="@color/colorWhite"/>
-            <size android:height="10dp" android:width="305dp"/>
         </shape>
     </item>
 

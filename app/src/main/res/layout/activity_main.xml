@@ -5,14 +5,21 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".MainActivity">
+    android:background="@color/colorWhite"
+    tools:context=".MainActivity"
+    android:clipToPadding="false">
 
     <com.example.drop_messages_android.viewpager.VerticalViewPager
         android:id="@+id/fragment_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+
+
         android:layout_marginLeft="15dp"
         android:layout_marginRight="15dp"
-        android:layout_marginBottom="50dp" />
+        android:layout_marginBottom="70dp"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:background="@color/colorPrimaryDark"/>
 
 </LinearLayout>

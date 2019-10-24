@@ -1,5 +1,6 @@
 package com.example.drop_messages_android.fragments
 
+import android.graphics.drawable.ShapeDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -14,8 +15,9 @@ class IndexFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
 
-        val rootView = inflater.inflate(R.layout.card_index_fragment, container, false) as ViewGroup
+        val view = inflater.inflate(R.layout.card_index_fragment, container, false) as ViewGroup
 
-        return rootView
+
+        return view
     }
 }

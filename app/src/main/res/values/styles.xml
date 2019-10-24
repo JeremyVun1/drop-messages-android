@@ -1,12 +1,16 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat">
+    <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="android:fontFamily">@font/roboto</item>
+
+        <!-- shadows -->
+        <item name="android:ambientShadowAlpha">0.8</item>
+        <item name="android:spotShadowAlpha">0.8</item>
     </style>
 
     <style name="AppNameText" parent="@style/AppTheme">
