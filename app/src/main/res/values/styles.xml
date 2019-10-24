@@ -9,8 +9,8 @@
         <item name="android:fontFamily">@font/roboto</item>
 
         <!-- shadows -->
-        <item name="android:ambientShadowAlpha">0.8</item>
-        <item name="android:spotShadowAlpha">0.8</item>
+        <item name="android:ambientShadowAlpha">0.3</item>
+        <item name="android:spotShadowAlpha">0.7</item>
     </style>
 
     <style name="AppNameText" parent="@style/AppTheme">

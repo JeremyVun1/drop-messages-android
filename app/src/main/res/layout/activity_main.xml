@@ -5,8 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/colorWhite"
     tools:context=".MainActivity"
+    android:clipChildren="false"
     android:clipToPadding="false">
 
     <com.example.drop_messages_android.viewpager.VerticalViewPager
@@ -15,9 +15,9 @@
         android:layout_height="match_parent"
 
 
-        android:layout_marginLeft="15dp"
-        android:layout_marginRight="15dp"
-        android:layout_marginBottom="70dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginBottom="35dp"
         android:clipChildren="false"
         android:clipToPadding="false"
         android:background="@color/colorPrimaryDark"/>

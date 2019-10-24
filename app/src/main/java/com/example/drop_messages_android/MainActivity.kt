@@ -16,8 +16,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        //initialiseUI()
-        initTestUI()
+        initialiseUI()
+        //initTestUI()
     }
 
     private fun initialiseUI() {

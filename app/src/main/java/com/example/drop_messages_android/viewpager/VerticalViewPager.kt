@@ -46,9 +46,9 @@ class VerticalViewPager(context: Context, attrs: AttributeSet?): ViewPager(conte
 
         var start_mod = 0.04f
         var start_delta = STACK_MARGIN
-        var start_elevation = 10f
+        var start_elevation = 12f
         var curr_card_elevation = 10f
-        val elevation_step = 1.5f
+        val elevation_step = 2f
         var starting = true
 
         private fun pushTopStack(page: View, dir: Int) {
@@ -129,7 +129,7 @@ class VerticalViewPager(context: Context, attrs: AttributeSet?): ViewPager(conte
                     //take card off the top stack
                     ps.state = PageViewState.TOP_TRANSITION
                     ps.margin = 0f
-                    page.elevation = 20f
+                    page.elevation = 15f
                     pushTopStack(page, -1)
                 }
 
@@ -137,10 +137,10 @@ class VerticalViewPager(context: Context, attrs: AttributeSet?): ViewPager(conte
                 else if (ps.state == PageViewState.CURRENT) {
                     ps.state = PageViewState.TOP_TRANSITION
                     ps.margin = 0f
-                    page.elevation = 40f
+                    page.elevation = 30f
                 }
 
-                page.alpha = (1+(position/5))
+                page.alpha = (1+(position/3)) + 0.11f
 
                 page.translationX = page.width * -position
                 page.translationY = (position * page.height)

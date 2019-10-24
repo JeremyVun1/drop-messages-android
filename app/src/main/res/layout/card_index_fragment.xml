@@ -1,46 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/colorWhite"
-    android:orientation="vertical"
-    tools:context=".MainActivity">
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:elevation="20dp"
+    android:stateListAnimator="@null">
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:srcCompat="@drawable/ic_drop_card"
+        android:elevation="2dp"
+        android:background="@drawable/shadow"
+        android:stateListAnimator="@null"/>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/content_container"
-
-        android:stateListAnimator="@null"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@drawable/drop_card_back"
-        android:elevation="20dp">
+
+        android:clipChildren="false"
+
+        android:clipToPadding="false"
+        android:elevation="10dp"
+        android:stateListAnimator="@null">
 
         <TextView
             android:id="@+id/tv_title"
             style="@style/AppNameText"
             android:layout_width="180dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="116dp"
-            android:background="@drawable/shadow"
-            android:elevation="20dp"
+            android:layout_marginTop="92dp"
             android:text="@string/app_name_formatted"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <ImageView
             android:id="@+id/img_logo"
-            android:layout_width="144dp"
-            android:layout_height="137dp"
-            android:layout_marginTop="32dp"
+            android:layout_width="125dp"
+            android:layout_height="108dp"
+            android:layout_marginTop="24dp"
             android:contentDescription="Logo"
             android:src="@drawable/ic_drop_message_circle"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintHorizontal_bias="0.502"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tv_title" />
 
@@ -49,31 +58,30 @@
             style="@style/DarkHintText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
+            android:layout_marginTop="90dp"
             android:text="@string/pull_up_start_hint"
-            app:layout_constraintBottom_toTopOf="@+id/floatingActionButton2"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/img_logo" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/floatingActionButton2"
+            android:id="@+id/hint_action_scroll"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="-50dp"
             android:backgroundTint="@color/colorPrimaryDark"
-            android:clickable="true"
+            android:clickable="false"
             android:elevation="50dp"
             android:focusable="true"
-            android:scaleX="1.1"
-            android:scaleY="1.1"
+            android:scaleX="0.7"
+            android:scaleY="0.7"
             android:src="@drawable/ic_arrow_up"
             android:tint="#00B90000"
             app:backgroundTint="@android:color/transparent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toStartOf="parent"
-            app:maxImageSize="30dp" />
+            app:layout_constraintStart_toStartOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-</LinearLayout>
+
+</FrameLayout>
