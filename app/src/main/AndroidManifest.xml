@@ -14,12 +14,17 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <!-- Sign up, sign in, index -->
-        <activity android:name=".UserFrontActivity">
-        </activity>
-
         <!-- Main loading screen for routing user based on saved login information -->
         <activity android:name=".MainLoaderActivity" android:noHistory="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Sign up, sign in, index -->
+        <activity android:name=".UserFrontActivity">
         </activity>
 
         <!-- Test Activity -->
@@ -27,11 +32,7 @@
         </activity>
 
         <activity android:name=".NoInternetActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
 
         <meta-data

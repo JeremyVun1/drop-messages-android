@@ -11,7 +11,7 @@
         style="@style/MediumWhiteText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="252dp"
+        android:layout_marginTop="236dp"
         android:gravity="center"
         android:stateListAnimator="@null"
         android:text="@string/no_internet_text"
@@ -22,18 +22,18 @@
 
     <Button
         android:id="@+id/btn_retry"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="92dp"
+        android:layout_height="45dp"
         android:background="@drawable/btn_rounded_white"
-        android:elevation="10dp"
+        android:elevation="4dp"
         android:stateListAnimator="@null"
         android:text="@string/no_internet_button"
-        android:textSize="16sp"
         android:textColor="@color/colorPrimaryDark"
+        android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tv_no_internet"
-        app:layout_constraintVertical_bias="0.116" />
+        app:layout_constraintVertical_bias="0.295" />
 </androidx.constraintlayout.widget.ConstraintLayout>

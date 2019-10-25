@@ -51,12 +51,13 @@ class NoInternetActivity : AppCompatActivity() {
      */
     private fun initAnimations() {
         // button pulse
-        val scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 0.95f, 1f)
-        val scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 0.95f, 1f)
-        val alpha = PropertyValuesHolder.ofFloat(View.ALPHA, 0.9f, 1f)
-        ObjectAnimator.ofPropertyValuesHolder(btn_retry, scaleX, scaleY, alpha).apply {
+        val scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 0.97f, 1f)
+        val scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 0.97f, 1f)
+        val alpha = PropertyValuesHolder.ofFloat(View.ALPHA, 0.92f, 1f)
+        val slideZ = PropertyValuesHolder.ofFloat(View.TRANSLATION_Z, 0f, 1.5f)
+        ObjectAnimator.ofPropertyValuesHolder(btn_retry, scaleX, scaleY, slideZ, alpha).apply {
             interpolator = OvershootInterpolator()
-            duration = 1000
+            duration = 1200
             repeatMode = ObjectAnimator.REVERSE
             repeatCount = ObjectAnimator.INFINITE
         }.start()

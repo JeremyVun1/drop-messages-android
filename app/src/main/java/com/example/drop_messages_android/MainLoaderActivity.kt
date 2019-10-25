@@ -86,7 +86,7 @@ class MainLoaderActivity : AppCompatActivity() {
             }
             else -> {
                 println("ROUTE making web socket connection")
-                connect(userDetails.token)
+                //connect(userDetails.token)
             }
         }
     }
@@ -112,7 +112,7 @@ class MainLoaderActivity : AppCompatActivity() {
                             sp.edit().putString("token", token).apply()
 
                             // connect the web socket
-                            connect(token)
+                            //connect(token)
                         }
                     }
                     else {
@@ -191,7 +191,8 @@ class MainLoaderActivity : AppCompatActivity() {
                 permissions.add(permission.ACCESS_COARSE_LOCATION)
         }
 
-        requestPermissions(permissions.toTypedArray(), 1)
+        if (permissions.size > 0)
+            requestPermissions(permissions.toTypedArray(), 1)
     }
 
     private suspend fun hasPermission(permission: String) : Boolean {
