@@ -42,4 +42,9 @@
     <string name="sign_up_url">https://drop-messages.herokuapp.com/api/register/</string>
     <string name="get_token_url">https://drop-messages.herokuapp.com/api/token/</string>
     <string name="web_socket_url">wss://drop-messages.herokuapp.com/ws/</string>
+
+    <!-- card labels -->
+    <string name="card_index_label">Welcome!</string>
+    <string name="card_register_label">Create an Account</string>
+    <string name="card_login_label">Log in</string>
 </resources>

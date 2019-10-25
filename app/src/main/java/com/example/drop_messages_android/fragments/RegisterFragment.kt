@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.LinearInterpolator
+import android.view.animation.OvershootInterpolator
 import androidx.fragment.app.Fragment
 import com.example.drop_messages_android.R
 import com.example.drop_messages_android.ValidatorHelper
@@ -81,13 +82,15 @@ class RegisterFragment : Fragment() {
             }
         }
 
+        initAnimations(rootView)
+
         return rootView
     }
 
     private fun startProgressBar() {
         //parent_container
         progress_container.visibility= View.VISIBLE
-        btn_signin.visibility = View.GONE
+        btn_signup.visibility = View.GONE
 
         //loading animation for Loading text dots
         var slideX = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, 0f, 90f)
@@ -120,11 +123,27 @@ class RegisterFragment : Fragment() {
 
         // Reset UI
         stopProgressBar()
-        btn_signin.visibility = View.VISIBLE
+        btn_signup.visibility = View.VISIBLE
     }
 
     interface RegisterUserListener {
         fun onSignUpUser(bundle: Bundle, errorListener: (err: SignUpModel) -> Unit)
         fun navToSignIn()
+    }
+
+    private fun initAnimations(view: View) {
+        // button animation
+        var scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 0.5f, 0.65f)
+        var scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 0.5f, 0.65f)
+        val alpha = PropertyValuesHolder.ofFloat(View.ALPHA, 0.95f, 1f)
+        var slideY = PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, 0f, 30f)
+
+        ObjectAnimator.ofPropertyValuesHolder(view.hint_action_scroll, scaleX, scaleY, alpha, slideY).apply {
+            interpolator = OvershootInterpolator()
+            startDelay = 0
+            duration = 1000
+            repeatMode = ObjectAnimator.REVERSE
+            repeatCount = ObjectAnimator.INFINITE
+        }.start()
     }
 }

@@ -2,6 +2,7 @@ package com.example.drop_messages_android.api
 
 import android.app.Application
 import com.example.drop_messages_android.R
+import com.example.drop_messages_android.location.Geolocation
 import com.tinder.scarlet.Scarlet
 import com.tinder.scarlet.lifecycle.android.AndroidLifecycle
 import com.tinder.scarlet.messageadapter.gson.GsonMessageAdapter
@@ -13,8 +14,9 @@ import java.util.concurrent.TimeUnit
 
 object DropMessageServiceFactory {
 
-    fun createSocket(application: Application): DropMessageService {
-        val socketUrl = application.resources.getString(R.string.web_socket_url)
+    fun createSocket(application: Application, loc: Geolocation): DropMessageService {
+        val socketUrl = "${application.resources.getString(R.string.web_socket_url)}${loc.formattedString()}/"
+        println("websocket created to $socketUrl")
 
         val client = OkHttpClient.Builder()
             .connectTimeout(10, TimeUnit.SECONDS)

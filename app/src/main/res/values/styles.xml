@@ -89,6 +89,11 @@
         <item name="android:textColor">@color/colorError</item>
     </style>
 
+    <style name="card_label" parent="@style/LargeText">
+        <item name="android:textColor">@color/colorWhiteText</item>
+        <item name="android:fontFamily">@font/roboto_medium</item>
+    </style>
+
     <!-- TODO hook up with toolbar style -->
     <style name="ToolBarTitle">
         <item name="android:textSize">24sp</item>

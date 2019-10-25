@@ -34,7 +34,7 @@
             android:id="@+id/action_hint_container"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="40dp"
+            android:layout_marginTop="70dp"
             android:gravity="center_horizontal"
             android:orientation="vertical">
 
@@ -42,20 +42,20 @@
                 android:id="@+id/hint_action_scroll"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="-5dp"
                 android:backgroundTint="@color/colorPrimaryDark"
                 android:clickable="false"
                 android:elevation="50dp"
                 android:focusable="true"
-                android:scaleX="0.7"
-                android:scaleY="0.7"
+                android:scaleX="0.6"
+                android:scaleY="0.6"
                 android:src="@drawable/ic_arrow_down"
                 android:tint="#00B90000"
                 app:backgroundTint="@android:color/transparent" />
 
             <TextView
-                android:id="@+id/tv_pull_up_hint"
+                android:id="@+id/tv_pull_down_hint"
                 style="@style/DarkHintText"
+                android:layout_marginBottom="10dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/pull_down_return_hint" />
@@ -176,8 +176,8 @@
         <LinearLayout
             android:id="@+id/signin_opt_container"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginTop="55dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="35dp"
             android:gravity="center_horizontal"
             android:orientation="horizontal">
 
@@ -198,6 +198,18 @@
                 android:background="@drawable/btn_rounded"
                 android:text="@string/sign_in_button" />
         </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_card_label"
+            style="@style/card_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="45dp"
+            android:text="@string/card_register_label"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.502"
+            app:layout_constraintStart_toStartOf="parent" />
 
     </LinearLayout>
 

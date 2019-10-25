@@ -34,36 +34,29 @@ class IndexFragment : Fragment() {
 
     private fun play_entry_animation(view: View) {
         // button animation
-        var scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 0.3f, 1.1f)
-        var scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 0.3f, 1.1f)
-        val alpha = PropertyValuesHolder.ofFloat(View.ALPHA, 0f, 1f)
-        var slideY = PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, 0f, -120f)
-
-        ObjectAnimator.ofPropertyValuesHolder(view.hint_action_scroll, scaleX, scaleY, alpha, slideY).apply {
+        var btn_scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 0.5f, 0.65f)
+        var btn_scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 0.5f, 0.65f)
+        val btn_alpha = PropertyValuesHolder.ofFloat(View.ALPHA, 0.95f, 1f)
+        val btn_slideY = PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, 0f, -40f)
+        ObjectAnimator.ofPropertyValuesHolder(view.hint_action_scroll, btn_scaleX, btn_scaleY, btn_alpha, btn_slideY).apply {
             interpolator = OvershootInterpolator()
             startDelay = 0
             duration = 1000
+            repeatMode = ObjectAnimator.REVERSE
+            repeatCount = ObjectAnimator.INFINITE
         }.start()
 
         // title animation
-        ObjectAnimator.ofPropertyValuesHolder(view.tv_title, scaleX, scaleY, alpha).apply {
+
+        val title_scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 0.3f, 1.1f)
+        val title_scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 0.3f, 1.1f)
+        val title_alpha = PropertyValuesHolder.ofFloat(View.ALPHA, 0f, 1f)
+        ObjectAnimator.ofPropertyValuesHolder(view.tv_title, title_scaleX, title_scaleY, title_alpha).apply {
             interpolator = OvershootInterpolator()
             duration = 500
         }.start()
 
         view.hint_action_scroll.translationY = -120f
-
-        scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 0.7f, 1.1f)
-        scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 0.7f, 1.1f)
-
-        val animator = ObjectAnimator.ofPropertyValuesHolder(view.hint_action_scroll, scaleX, scaleY).apply {
-            duration = 500
-            startDelay = 6000
-            repeatMode = ObjectAnimator.REVERSE
-            repeatCount = 4
-            interpolator = OvershootInterpolator()
-        }
-        animator.start()
 
         // text animation
         val text_slideY = PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, 0f, -20f)

@@ -24,7 +24,7 @@
         android:id="@+id/content_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="110dp"
+        android:layout_marginTop="120dp"
         android:clipChildren="false"
         android:clipToPadding="false"
         android:elevation="10dp"
@@ -70,14 +70,6 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <TextView
-            android:id="@+id/tv_signup_error"
-            style="@style/error_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="TextView" />
-
         <Button
             android:id="@+id/btn_signin"
             style="@style/MediumButtonText"
@@ -87,6 +79,14 @@
             android:elevation="40dp"
             android:text="@string/sign_in_button" />
 
+
+        <TextView
+            android:id="@+id/tv_signup_error"
+            style="@style/error_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:textColor="@color/colorError" />
 
         <TableLayout
             android:id="@+id/progress_container"
@@ -142,8 +142,8 @@
         <LinearLayout
             android:id="@+id/signin_opt_container"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginTop="70dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="80dp"
             android:gravity="center_horizontal"
             android:orientation="horizontal">
 
@@ -163,7 +163,20 @@
                 android:background="@drawable/btn_rounded"
                 android:elevation="40dp"
                 android:text="@string/sign_up_button" />
+
         </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_card_label"
+            style="@style/card_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="65dp"
+            android:text="@string/card_login_label"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.502"
+            app:layout_constraintStart_toStartOf="parent" />
 
     </LinearLayout>
 

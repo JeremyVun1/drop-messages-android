@@ -82,8 +82,6 @@ class UserFrontActivity : AppCompatActivity(), RegisterFragment.RegisterUserList
             val model = GetTokenModel(bundle.getString("username") ?: "",
                 bundle.getString("password") ?: "")
 
-            println("Authenticating as $model")
-
             // auth the user by getting a JWT token from remote server
             val url = resources.getString(R.string.get_token_url)
             val gson = Gson()
@@ -107,7 +105,7 @@ class UserFrontActivity : AppCompatActivity(), RegisterFragment.RegisterUserList
                 },
                 {
                     Log.e("POST", it.toString())
-                    Toast.makeText(applicationContext, it.toString(), Toast.LENGTH_SHORT).show()
+                    errorListener(InvalidLoginResponseModel(arrayOf("Error $it")))
                 }
             )
         }
@@ -159,7 +157,7 @@ class UserFrontActivity : AppCompatActivity(), RegisterFragment.RegisterUserList
                 },
                 {
                     Log.e("POST", it.toString())
-                    Toast.makeText(applicationContext, it.toString(), Toast.LENGTH_SHORT).show()
+                    errorListener(SignUpModel("Error $it", "", ""))
                 }
             )
         }

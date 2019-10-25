@@ -7,6 +7,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.Location
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -16,6 +17,8 @@ import android.view.animation.OvershootInterpolator
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.drop_messages_android.api.*
+import com.example.drop_messages_android.location.Geolocation
+import com.google.android.gms.location.LocationServices
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.tinder.scarlet.WebSocket
@@ -33,6 +36,8 @@ import kotlinx.coroutines.withContext
 // or directly launch the activity with stored credentials
 class MainLoaderActivity : AppCompatActivity() {
 
+    var waitingForPermissions = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_loading)
@@ -46,12 +51,11 @@ class MainLoaderActivity : AppCompatActivity() {
 
         initAnimations()
 
-        /**
-         * start Coroutine on UI thread to handle user routing
-         * Hand off work to coroutines on IO/Default scopes as we go
-         */
-        CoroutineScope(Main).launch {
+        CoroutineScope(Default).launch {
             handlePermissionRequests()
+            //spin while we wait for user to respond to a potential permission request
+            while (waitingForPermissions) { delay(100) }
+
             handleRouting()
         }
     }
@@ -70,23 +74,30 @@ class MainLoaderActivity : AppCompatActivity() {
      *      - route to MainActivity
      */
     private suspend fun handleRouting() {
-        val userDetails = getUserDetails()
+        withContext(Main) {
+            val userDetails = getUserDetails()
 
-        when {
-            !Util.hasInternet(applicationContext) -> {
-                navToNoInternet()
-            }
-            userDetails == null -> {
-                navToUserFront()
-            }
-            userDetails.token == null -> {
-                println("ROUTE getting tokens")
-                print("user details: $userDetails")
-                getToken(userDetails)
-            }
-            else -> {
-                println("ROUTE making web socket connection")
-                //connect(userDetails.token)
+            when {
+                !Util.hasInternet(applicationContext) -> {
+                    navToNoInternet()
+                }
+                userDetails == null -> {
+
+                    withContext(IO) {
+                        setLoadingTextAsync("Welcome first time user!")
+                        delay(1200)
+                    }
+                    navToUserFront()
+                }
+                userDetails.token == null -> {
+                    println("ROUTE getting tokens")
+                    print("user details: $userDetails")
+                    getToken(userDetails)
+                }
+                else -> {
+                    println("ROUTE making web socket connection")
+                    setupConnection(userDetails.token)
+                }
             }
         }
     }
@@ -112,7 +123,7 @@ class MainLoaderActivity : AppCompatActivity() {
                             sp.edit().putString("token", token).apply()
 
                             // connect the web socket
-                            //connect(token)
+                            setupConnection(token)
                         }
                     }
                     else {
@@ -131,29 +142,43 @@ class MainLoaderActivity : AppCompatActivity() {
         }
     }
 
-    private suspend fun connect(token: String) {
+    private suspend fun setupConnection(token: String) {
         setLoadingTextAsync("Connecting to server")
+
         withContext(IO) {
-            // do connection stuff here
-            val socket = DropMessageServiceFactory.createSocket(application)
-
-            socket.observeWebSocketEvent()
-                .filter { it is WebSocket.Event.OnConnectionOpened<*> }
-                .subscribe {
-                    println("connection opened")
-                    socket.authenticate(AuthenticateSocket(token))
-                    println("attempt socket auth: $token")
+            if (hasLocationPermissions()) {
+                connect(token, Geolocation(1.0,1.0))
+            }
+            else {
+                val flp = LocationServices.getFusedLocationProviderClient(applicationContext)
+                flp.lastLocation.addOnSuccessListener {
+                    CoroutineScope(IO).launch {
+                        connect(token, Geolocation(it.latitude, it.longitude))
+                    }
                 }
-
-            socket.observeSocketResponse()
-                .subscribe {
-                    println("RESPONSE: ${it.category} - ${it.data}")
-                }
+            }
         }
     }
 
+    private suspend fun connect(token: String, loc: Geolocation) {
+        // do connection stuff here
+        val socket = DropMessageServiceFactory.createSocket(application, loc)
+
+        socket.observeWebSocketEvent()
+            .filter { it is WebSocket.Event.OnConnectionOpened<*> }
+            .subscribe {
+                println("connection opened")
+                socket.authenticate(AuthenticateSocket(token))
+                println("attempt socket auth: $token")
+            }
+
+        socket.observeSocketResponse()
+            .subscribe {
+                println("RESPONSE: ${it.category} - ${it.data}")
+            }
+    }
+
     private suspend fun getUserDetails() : SignInModel? {
-        println("GET USER DETAILS")
         setLoadingTextAsync("Finding User Details")
         var result : SignInModel? = null
 
@@ -191,12 +216,25 @@ class MainLoaderActivity : AppCompatActivity() {
                 permissions.add(permission.ACCESS_COARSE_LOCATION)
         }
 
-        if (permissions.size > 0)
+        if (permissions.size > 0) {
+            waitingForPermissions = true
             requestPermissions(permissions.toTypedArray(), 1)
+        }
+    }
+
+    private suspend fun hasLocationPermissions() : Boolean {
+        return hasPermission(permission.ACCESS_COARSE_LOCATION) && hasPermission(permission.ACCESS_FINE_LOCATION)
     }
 
     private suspend fun hasPermission(permission: String) : Boolean {
         return checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray)
+    {
+        println("permissions granted!")
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        waitingForPermissions = false
     }
 
     /**
@@ -205,6 +243,7 @@ class MainLoaderActivity : AppCompatActivity() {
     private suspend fun setLoadingTextAsync(text: String) {
         withContext(Main) {
             setLoadingText(text)
+            delay(200)
         }
     }
     @SuppressLint("SetTextI18n")
