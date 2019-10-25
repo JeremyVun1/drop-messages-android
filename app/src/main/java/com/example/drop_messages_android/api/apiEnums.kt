@@ -1,4 +1,4 @@
-package com.example.drop_messages_android.network
+package com.example.drop_messages_android.api
 
 enum class RequestCategory(val category: Int) {
     CREATE_DROP(0),

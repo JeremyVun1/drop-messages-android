@@ -3,6 +3,7 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/parent_container"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:clipChildren="false"
@@ -14,15 +15,16 @@
         android:id="@+id/imageView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:srcCompat="@drawable/ic_drop_card"
-        android:elevation="2dp"
         android:background="@drawable/shadow"
-        android:stateListAnimator="@null"/>
+        android:elevation="2dp"
+        android:stateListAnimator="@null"
+        app:srcCompat="@drawable/ic_drop_card" />
 
     <LinearLayout
         android:id="@+id/content_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginTop="110dp"
         android:clipChildren="false"
         android:clipToPadding="false"
         android:elevation="10dp"
@@ -34,9 +36,8 @@
             android:id="@+id/img_logo"
             android:layout_width="wrap_content"
             android:layout_height="66dp"
-            android:contentDescription="@string/logo_content_desc"
 
-            android:layout_marginTop="115dp"
+            android:contentDescription="@string/logo_content_desc"
             android:scaleX="0.9"
             android:scaleY="0.85"
             android:src="@drawable/ic_drop_message" />
@@ -44,7 +45,8 @@
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tv_input_username"
             android:layout_width="185dp"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            app:errorTextAppearance="@style/error_text">
 
             <com.google.android.material.textfield.TextInputEditText
                 style="@style/LightHintText"
@@ -56,31 +58,92 @@
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tv_input_password"
             android:layout_width="185dp"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            app:errorTextAppearance="@style/error_text">
 
             <com.google.android.material.textfield.TextInputEditText
                 style="@style/LightHintText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/password_hint" />
+                android:hint="@string/password_hint"
+                android:inputType="textPassword" />
+
         </com.google.android.material.textfield.TextInputLayout>
+
+        <TextView
+            android:id="@+id/tv_signup_error"
+            style="@style/error_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="TextView" />
 
         <Button
             android:id="@+id/btn_signin"
             style="@style/MediumButtonText"
             android:layout_width="185dp"
             android:layout_height="35dp"
-            android:layout_marginTop="10dp"
             android:background="@drawable/btn_rounded"
             android:elevation="40dp"
             android:text="@string/sign_in_button" />
 
 
+        <TableLayout
+            android:id="@+id/progress_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp">
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center">
+
+                <ProgressBar
+                    android:id="@+id/progress_sign_in"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
+                    android:layout_gravity="center"
+                    android:indeterminateDrawable="@drawable/custom_circle_progressbar" />
+            </TableRow>
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <TextView
+                        android:id="@+id/tv_progress"
+                        style="@style/DarkHintText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_horizontal"
+                        android:paddingLeft="10dp"
+                        android:text="@string/generic_loading" />
+
+                    <ImageView
+                        android:id="@+id/img_white_cover"
+                        android:layout_width="50dp"
+                        android:layout_height="25dp"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="45dp"
+                        android:layout_marginTop="0dp"
+                        android:background="@color/colorWhiteText" />
+                </FrameLayout>
+
+            </TableRow>
+
+        </TableLayout>
+
         <LinearLayout
             android:id="@+id/signin_opt_container"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginTop="90dp"
+            android:layout_marginTop="35dp"
             android:gravity="center_horizontal"
             android:orientation="horizontal">
 

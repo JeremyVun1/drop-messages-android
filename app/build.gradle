@@ -9,7 +9,7 @@ android {
     buildToolsVersion "29.0.2"
     defaultConfig {
         applicationId "com.example.drop_messages_android"
-        minSdkVersion 21
+        minSdkVersion 23
         targetSdkVersion 29
         versionCode 1
         versionName "1.0"
@@ -20,6 +20,13 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = "1.8"
     }
 }
 
@@ -43,5 +50,9 @@ dependencies {
     implementation 'com.android.volley:volley:1.1.1'
     implementation 'com.google.code.gson:gson:2.8.6'
 
-    implementation 'com.google.android.gms:play-services-auth:17.0.0'
+    implementation 'com.tinder.scarlet:scarlet:0.1.9'
+    implementation "com.tinder.scarlet:websocket-okhttp:0.1.9"
+    implementation "com.tinder.scarlet:stream-adapter-rxjava2:0.1.9"
+    implementation "com.tinder.scarlet:message-adapter-gson:0.1.9"
+    implementation "com.tinder.scarlet:lifecycle-android:0.1.9"
 }

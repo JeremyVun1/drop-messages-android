@@ -73,7 +73,8 @@
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tv_input_username"
             android:layout_width="185dp"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            app:errorTextAppearance="@style/error_text">
 
             <com.google.android.material.textfield.TextInputEditText
                 style="@style/LightHintText"
@@ -85,25 +86,29 @@
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tv_input_password"
             android:layout_width="185dp"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            app:errorTextAppearance="@style/error_text">
 
             <com.google.android.material.textfield.TextInputEditText
                 style="@style/LightHintText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/password_hint" />
+                android:hint="@string/password_hint"
+                android:inputType="textPassword" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tv_input_email"
             android:layout_width="185dp"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            app:errorTextAppearance="@style/error_text">
 
             <com.google.android.material.textfield.TextInputEditText
                 style="@style/LightHintText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/email_hint" />
+                android:hint="@string/email_hint"
+                android:inputType="textEmailAddress" />
 
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -121,7 +126,7 @@
             android:id="@+id/signin_opt_container"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginTop="65dp"
+            android:layout_marginTop="55dp"
             android:gravity="center_horizontal"
             android:orientation="horizontal">
 

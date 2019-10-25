@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.example.drop_messages_android.R
 import com.example.drop_messages_android.ValidatorHelper
-import com.example.drop_messages_android.network.SignUpModel
+import com.example.drop_messages_android.api.SignUpModel
 import kotlinx.android.synthetic.main.card_login_fragment.view.*
 import kotlinx.android.synthetic.main.card_register_fragment.*
 
@@ -74,7 +74,7 @@ class RegisterFragment : Fragment() {
     }
 
     // error listener if http request from sign up bounces e.g. username taken
-    // callback for main activity
+    // callback for user front activity
     fun errorListener(response: SignUpModel) {
         if (response.username.isNotEmpty())
             tv_input_username.editText!!.error = response.username

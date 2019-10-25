@@ -1,4 +1,4 @@
-package com.example.drop_messages_android.network
+package com.example.drop_messages_android.api
 
 import android.content.Context
 import com.android.volley.Request

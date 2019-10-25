@@ -14,7 +14,6 @@
     <string name="sign_in_option_label">ALREADY HAVE AN ACCOUNT?</string>
     <string name="sign_up_option_label">DON\'T HAVE AN ACCOUNT?</string>
 
-
     <!-- Action hints -->
     <string name="pull_up_start_hint">Pull up to start!</string>
     <string name="pull_down_return_hint">Pull down to go back</string>

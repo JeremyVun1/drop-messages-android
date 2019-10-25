@@ -24,6 +24,9 @@
     </style>
 
     <!-- Font sizes -->
+    <style name="SmallText" parent="@style/AppTheme">
+        <item name="android:textSize">10sp</item>
+    </style>
     <style name="RegularText" parent="@style/AppTheme">
         <item name="android:textSize">12sp</item>
     </style>
@@ -80,6 +83,10 @@
 
     <style name="MediumDarkText" parent="@style/MediumText">
         <item name="android:textColor">@color/colorPrimary</item>
+    </style>
+
+    <style name="error_text" parent="@style/SmallText">
+        <item name="android:textColor">@color/colorError</item>
     </style>
 
     <!-- TODO hook up with toolbar style -->

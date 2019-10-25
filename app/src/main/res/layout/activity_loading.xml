@@ -24,26 +24,48 @@
         android:layout_width="wrap_content"
         android:layout_height="80dp"
         android:layout_gravity="center"
+        android:layout_marginTop="289dp"
+        android:layout_marginBottom="290dp"
         android:paddingBottom="15dp"
         app:srcCompat="@drawable/ic_drop_message" />
 
-    <TextView
-        android:id="@+id/tv_loading"
-        style="@style/MediumDarkText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginTop="70dp"
-        android:layout_marginLeft="10dp"
-        android:text="@string/generic_loading" />
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/loading_text_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center">
 
-    <ImageView
-        android:id="@+id/img_white_cover"
-        android:layout_width="50dp"
-        android:layout_height="20dp"
-        android:layout_gravity="center"
-        android:layout_marginLeft="50dp"
-        android:layout_marginTop="70dp"
-        app:srcCompat="@drawable/img_rect_white" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="150dp"
+            android:layout_marginLeft="20dp"
+            android:gravity="center"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:id="@+id/tv_loading"
+                style="@style/MediumDarkText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="right"
+                android:text="@string/generic_loading"
+
+                />
+
+            <ImageView
+                android:id="@+id/img_white_cover"
+                android:layout_width="20dp"
+                android:layout_height="30dp"
+                android:layout_marginLeft="-20dp"
+                app:srcCompat="@drawable/img_rect_white" />
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </FrameLayout>
