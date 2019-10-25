@@ -1,5 +1,12 @@
 package com.example.drop_messages_android.location
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.core.app.ActivityCompat.requestPermissions
+import androidx.core.content.ContextCompat
+
 /**
  * Handles getting the user's lat, long location
  * decision logic between COARSE, FINE and permission handling
@@ -41,6 +48,24 @@ package com.example.drop_messages_android.location
  * If we are in the background, STOP!!!
  */
 
-object LocationHandler {
+/**
+ * USE GEOFENCING TO DETERMINE GEOLOC BLOCKS
+ * Use geofencing to detect if user has entered, stayed in, or exited an area of interest
+ */
 
+object LocationHandler {
+    fun getCurrentLocation() {
+
+    }
+    /*
+    private fun runtimePermissions() : Boolean {
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
+                requestPermissions(getActivity(), arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION), 100)
+            }
+        }
+    }
+     */
 }

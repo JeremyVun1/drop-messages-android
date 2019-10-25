@@ -3,7 +3,8 @@
     package="com.example.drop_messages_android">
 
     <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-feature android:name="android.hardware.location.gps" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 
     <application
         android:allowBackup="true"
@@ -12,16 +13,24 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".UserFrontActivity">
 
+        <!-- Sign up, sign in, index -->
+        <activity android:name=".UserFrontActivity">
         </activity>
+
+        <!-- Main loading screen for routing user based on saved login information -->
         <activity android:name=".MainLoaderActivity" android:noHistory="true">
+        </activity>
+
+        <!-- Test Activity -->
+        <activity android:name=".TestActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />

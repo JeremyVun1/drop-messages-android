@@ -55,4 +55,6 @@ dependencies {
     implementation "com.tinder.scarlet:stream-adapter-rxjava2:0.1.9"
     implementation "com.tinder.scarlet:message-adapter-gson:0.1.9"
     implementation "com.tinder.scarlet:lifecycle-android:0.1.9"
+
+    implementation 'com.google.android.gms:play-services-location:17.0.0'
 }
