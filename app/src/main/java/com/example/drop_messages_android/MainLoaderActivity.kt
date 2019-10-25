@@ -118,9 +118,14 @@ class MainLoaderActivity : AppCompatActivity() {
                         println("JWT response: ${response["token"]}")
 
                         CoroutineScope(Main).launch {
-                            val token = response["token"].toString()
+                            val token = response["token"]
+                                .toString()
+                                .removePrefix("\"")
+                                .removeSuffix("\"")
+
                             val sp = getSharedPreferences("Login", Context.MODE_PRIVATE)
-                            sp.edit().putString("token", token).apply()
+                            sp.edit().putString("token", token).commit()
+                            println(sp.getString("token", null))
 
                             // connect the web socket
                             setupConnection(token)
@@ -163,18 +168,17 @@ class MainLoaderActivity : AppCompatActivity() {
     private suspend fun connect(token: String, loc: Geolocation) {
         // do connection stuff here
         val socket = DropMessageServiceFactory.createSocket(application, loc)
-
+        println("CONNECT WAS CALLED")
         socket.observeWebSocketEvent()
             .filter { it is WebSocket.Event.OnConnectionOpened<*> }
             .subscribe {
-                println("connection opened")
                 socket.authenticate(AuthenticateSocket(token))
-                println("attempt socket auth: $token")
+                println("<<[SND]attempt socket auth: $token")
             }
 
         socket.observeSocketResponse()
             .subscribe {
-                println("RESPONSE: ${it.category} - ${it.data}")
+                println(">>[REC]: $it")
             }
     }
 
