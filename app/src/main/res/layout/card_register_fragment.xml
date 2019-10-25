@@ -121,6 +121,57 @@
             android:elevation="40dp"
             android:text="@string/sign_up_button" />
 
+        <TableLayout
+            android:id="@+id/progress_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone">
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center">
+
+                <ProgressBar
+                    android:id="@+id/progress_sign_in"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
+                    android:layout_gravity="center"
+                    android:indeterminateDrawable="@drawable/custom_circle_progressbar" />
+            </TableRow>
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <TextView
+                        android:id="@+id/tv_progress"
+                        style="@style/DarkHintText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_horizontal"
+                        android:paddingLeft="10dp"
+                        android:text="@string/generic_loading" />
+
+                    <ImageView
+                        android:id="@+id/img_white_cover"
+                        android:layout_width="50dp"
+                        android:layout_height="25dp"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="45dp"
+                        android:layout_marginTop="0dp"
+                        android:background="@color/colorWhiteText" />
+                </FrameLayout>
+
+            </TableRow>
+
+        </TableLayout>
+
 
         <LinearLayout
             android:id="@+id/signin_opt_container"

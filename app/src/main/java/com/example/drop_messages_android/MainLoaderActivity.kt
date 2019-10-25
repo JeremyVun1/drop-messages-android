@@ -1,10 +1,13 @@
 package com.example.drop_messages_android
 
+import android.Manifest.permission
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -33,18 +36,26 @@ class MainLoaderActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_loading)
-        overridePendingTransition(0, 0)
+    }
+
+    /**
+     * Do stuff in onResume so that we can also "restart" the activity on back button
+     */
+    override fun onResume() {
+        super.onResume()
 
         initAnimations()
 
         /**
          * start Coroutine on UI thread to handle user routing
-         * Hand off work to sub coroutines on IO/Default scopes as we go
+         * Hand off work to coroutines on IO/Default scopes as we go
          */
         CoroutineScope(Main).launch {
+            handlePermissionRequests()
             handleRouting()
         }
     }
+
 
     /**
      * Need to handle 3 states
@@ -62,6 +73,9 @@ class MainLoaderActivity : AppCompatActivity() {
         val userDetails = getUserDetails()
 
         when {
+            !Util.hasInternet(applicationContext) -> {
+                navToNoInternet()
+            }
             userDetails == null -> {
                 navToUserFront()
             }
@@ -160,6 +174,31 @@ class MainLoaderActivity : AppCompatActivity() {
     }
 
     /**
+     * Handle permission requests
+     */
+    private suspend fun handlePermissionRequests() {
+        val permissions = mutableListOf<String>()
+
+        // check internet
+        if (!hasPermission(permission.INTERNET))
+            permissions.add(permission.INTERNET)
+
+        // location permissions
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!hasPermission(permission.ACCESS_FINE_LOCATION))
+                permissions.add(permission.ACCESS_FINE_LOCATION)
+            if (!hasPermission(permission.ACCESS_COARSE_LOCATION))
+                permissions.add(permission.ACCESS_COARSE_LOCATION)
+        }
+
+        requestPermissions(permissions.toTypedArray(), 1)
+    }
+
+    private suspend fun hasPermission(permission: String) : Boolean {
+        return checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
+    }
+
+    /**
      * utility functions to change the output of our loading text
      */
     private suspend fun setLoadingTextAsync(text: String) {
@@ -172,16 +211,9 @@ class MainLoaderActivity : AppCompatActivity() {
         tv_loading.text = "$text . . ."
     }
 
-
-
-    private fun login() {
-        // get auth token, open web socket
-    }
-
-    private fun isLoginSaved() : Boolean {
-        return false
-    }
-
+    /**
+     * Navigation function
+     */
     private suspend fun navToUserFront() {
         withContext(Main) {
             val i = Intent(applicationContext, UserFrontActivity::class.java)
@@ -190,9 +222,19 @@ class MainLoaderActivity : AppCompatActivity() {
         }
     }
 
+    private suspend fun navToNoInternet() {
+        withContext(Main) {
+            val i = Intent(applicationContext, NoInternetActivity::class.java)
+            startActivity(i)
+        }
+    }
+
+    /**
+     * View Animations
+     */
     private fun initAnimations() {
         // dots animation on loading text
-        var slideX = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, 0f, 120f)
+        val slideX = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, 0f, 120f)
 
         ObjectAnimator.ofPropertyValuesHolder(img_white_cover, slideX).apply {
             interpolator = LinearInterpolator()
@@ -202,9 +244,9 @@ class MainLoaderActivity : AppCompatActivity() {
         }.start()
 
         // logo pulse
-        var scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 0.8f, 1f)
-        var scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 0.8f, 1f)
-        var alpha = PropertyValuesHolder.ofFloat(View.ALPHA, 0.8f, 1f)
+        val scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 0.8f, 1f)
+        val scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 0.8f, 1f)
+        val alpha = PropertyValuesHolder.ofFloat(View.ALPHA, 0.8f, 1f)
         ObjectAnimator.ofPropertyValuesHolder(img_logo, scaleX, scaleY, alpha).apply {
             interpolator = OvershootInterpolator()
             duration = 1000

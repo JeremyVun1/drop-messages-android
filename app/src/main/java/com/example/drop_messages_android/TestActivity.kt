@@ -1,6 +1,11 @@
 package com.example.drop_messages_android
 
 import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -14,12 +19,9 @@ class TestActivity: AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_test)
 
-        handlePermissions()
-
         val flp = LocationServices.getFusedLocationProviderClient(this)
-
         btn_get_location.setOnClickListener {
-            println("clicked")
+
             flp.lastLocation.addOnSuccessListener {
                 println("flp success")
                 tv_lat.text = it.latitude.toString()
@@ -28,9 +30,13 @@ class TestActivity: AppCompatActivity() {
         }
     }
 
-    fun handlePermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION), 1)
-        }
-    }
+
+
+
+
+
+
+
+
+
 }

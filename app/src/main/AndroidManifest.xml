@@ -24,6 +24,9 @@
 
         <!-- Test Activity -->
         <activity android:name=".TestActivity">
+        </activity>
+
+        <activity android:name=".NoInternetActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

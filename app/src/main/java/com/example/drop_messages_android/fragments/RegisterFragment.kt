@@ -1,17 +1,28 @@
 package com.example.drop_messages_android.fragments
 
+import android.animation.ObjectAnimator
+import android.animation.PropertyValuesHolder
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.LinearInterpolator
 import androidx.fragment.app.Fragment
 import com.example.drop_messages_android.R
 import com.example.drop_messages_android.ValidatorHelper
 import com.example.drop_messages_android.api.SignUpModel
-import kotlinx.android.synthetic.main.card_login_fragment.view.*
+import kotlinx.android.synthetic.main.activity_loading.img_white_cover
 import kotlinx.android.synthetic.main.card_register_fragment.*
+import kotlinx.android.synthetic.main.card_register_fragment.btn_signin
+import kotlinx.android.synthetic.main.card_register_fragment.progress_container
+import kotlinx.android.synthetic.main.card_register_fragment.tv_input_password
+import kotlinx.android.synthetic.main.card_register_fragment.tv_input_username
+import kotlinx.android.synthetic.main.card_register_fragment.view.*
 
 class RegisterFragment : Fragment() {
+
+    var whiteBoxAnimator : ObjectAnimator? = null
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -62,15 +73,38 @@ class RegisterFragment : Fragment() {
                 b.putString("username", username)
                 b.putString("password", password)
                 b.putString("email", email)
-                println("${username}, ${password}, ${email}")
+
+                startProgressBar()
 
                 val listener = activity as RegisterUserListener
-
                 listener.onSignUpUser(b, ::errorListener)
             }
         }
 
         return rootView
+    }
+
+    private fun startProgressBar() {
+        //parent_container
+        progress_container.visibility= View.VISIBLE
+        btn_signin.visibility = View.GONE
+
+        //loading animation for Loading text dots
+        var slideX = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, 0f, 90f)
+        whiteBoxAnimator = ObjectAnimator.ofPropertyValuesHolder(img_white_cover, slideX).apply {
+            interpolator = LinearInterpolator()
+            duration = 2000
+            repeatMode = ObjectAnimator.RESTART
+            repeatCount = ObjectAnimator.INFINITE
+        }
+        whiteBoxAnimator!!.start()
+    }
+
+    private fun stopProgressBar() {
+        progress_container.visibility= View.GONE
+        btn_signin.visibility = View.VISIBLE
+        if (whiteBoxAnimator != null)
+            whiteBoxAnimator!!.end()
     }
 
     // error listener if http request from sign up bounces e.g. username taken
@@ -82,6 +116,11 @@ class RegisterFragment : Fragment() {
             tv_input_username.editText!!.error = response.password
         if (response.email.isNotEmpty())
             tv_input_username.editText!!.error = response.email
+
+
+        // Reset UI
+        stopProgressBar()
+        btn_signin.visibility = View.VISIBLE
     }
 
     interface RegisterUserListener {

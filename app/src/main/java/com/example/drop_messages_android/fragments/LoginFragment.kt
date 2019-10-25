@@ -35,9 +35,6 @@ class LoginFragment : Fragment() {
 
         // signin button
         rootView.btn_signin.setOnClickListener {
-            //display a login progress bar
-            startProgressBar()
-
             val username = tv_input_username.editText!!.text.toString()
             val password = tv_input_password.editText!!.text.toString()
 
@@ -62,8 +59,9 @@ class LoginFragment : Fragment() {
                 b.putString("username", username)
                 b.putString("password", password)
 
-                val listener = activity as LoginUserListener
+                startProgressBar()
 
+                val listener = activity as LoginUserListener
                 listener.onSignIn(b, ::errorListener)
             }
         }
@@ -72,8 +70,8 @@ class LoginFragment : Fragment() {
     }
 
     private fun startProgressBar() {
-        //parent_container
         progress_container.visibility= View.VISIBLE
+        btn_signin.visibility = View.GONE
 
         //loading animation for Loading text dots
         var slideX = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, 0f, 90f)
@@ -87,7 +85,8 @@ class LoginFragment : Fragment() {
     }
 
     private fun stopProgressBar() {
-        progress_container.visibility= View.INVISIBLE
+        progress_container.visibility= View.GONE
+        btn_signin.visibility = View.VISIBLE
         if (whiteBoxAnimator != null)
             whiteBoxAnimator!!.end()
     }
@@ -102,8 +101,9 @@ class LoginFragment : Fragment() {
 
         tv_signup_error.text = sb.toString()
 
-        //stop the login progress bar
+        // reset UI back
         stopProgressBar()
+        btn_signin.visibility = View.VISIBLE
     }
 
     interface LoginUserListener {

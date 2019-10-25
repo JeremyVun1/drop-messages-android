@@ -34,6 +34,10 @@
     <string name="map_label">Map</string>
     <string name="my_drops_label">My Drops</string>
 
+    <!-- no internet -->
+    <string name="no_internet_text">No Internet connection detected!</string>
+    <string name="no_internet_button">Retry</string>
+
     <!-- API Urls -->
     <string name="sign_up_url">https://drop-messages.herokuapp.com/api/register/</string>
     <string name="get_token_url">https://drop-messages.herokuapp.com/api/token/</string>

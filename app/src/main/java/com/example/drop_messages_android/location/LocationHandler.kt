@@ -1,6 +1,7 @@
 package com.example.drop_messages_android.location
 
 import android.Manifest
+import android.app.Application
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
@@ -53,7 +54,7 @@ import androidx.core.content.ContextCompat
  * Use geofencing to detect if user has entered, stayed in, or exited an area of interest
  */
 
-object LocationHandler {
+class LocationHandler(val app: Application) {
     fun getCurrentLocation() {
 
     }
@@ -68,4 +69,6 @@ object LocationHandler {
         }
     }
      */
+
+
 }
