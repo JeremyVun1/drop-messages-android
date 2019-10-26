@@ -16,10 +16,7 @@
 
         <!-- for testing stuff -->
         <activity android:name=".TestActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+
         </activity>
 
         <!-- Main loading screen for routing user, authenticating,
@@ -28,7 +25,12 @@
         </activity>
 
         <!-- Sign up, sign in, index -->
-        <activity android:name=".UserFrontActivity"></activity>
+        <activity android:name=".UserFrontActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
 
         <!-- The main user activity where they can do the stuff -->
         <activity android:name=".DropMessagesActivity"></activity>

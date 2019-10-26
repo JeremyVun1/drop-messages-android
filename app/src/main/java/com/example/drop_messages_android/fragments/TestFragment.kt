@@ -20,11 +20,9 @@ class TestFragment : Fragment() {
     ): View? {
 
 
-        val rootView = inflater.inflate(R.layout.card_test, container, false) as ViewGroup
+        val rootView = inflater.inflate(R.layout.card_test_large, container, false) as ViewGroup
 
         val rnd = Random()
-        val color = Color.argb(255, rnd.nextInt(256), rnd.nextInt(256), rnd.nextInt(256))
-        rootView.setBackgroundColor(color)
 
         rootView.tv_output.text = rnd.nextInt(20).toString()
 

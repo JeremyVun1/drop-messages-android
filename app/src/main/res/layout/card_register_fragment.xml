@@ -7,7 +7,7 @@
     android:layout_height="wrap_content"
     android:clipChildren="false"
     android:clipToPadding="false"
-    android:elevation="20dp"
+    android:elevation="0dp"
     android:stateListAnimator="@null">
 
     <ImageView
@@ -34,7 +34,7 @@
             android:id="@+id/action_hint_container"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="70dp"
+            android:layout_marginTop="65dp"
             android:gravity="center_horizontal"
             android:orientation="vertical">
 
@@ -46,18 +46,19 @@
                 android:clickable="false"
                 android:elevation="50dp"
                 android:focusable="true"
-                android:scaleX="0.6"
-                android:scaleY="0.6"
+                android:scaleX="0.8"
+                android:scaleY="0.8"
                 android:src="@drawable/ic_arrow_down"
                 android:tint="#00B90000"
-                app:backgroundTint="@android:color/transparent" />
+                app:backgroundTint="@android:color/transparent"
+                app:fabSize="mini" />
 
             <TextView
                 android:id="@+id/tv_pull_down_hint"
                 style="@style/DarkHintText"
-                android:layout_marginBottom="10dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
                 android:text="@string/pull_down_return_hint" />
         </LinearLayout>
 
@@ -204,7 +205,7 @@
             style="@style/card_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="45dp"
+            android:layout_marginTop="25dp"
             android:text="@string/card_register_label"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

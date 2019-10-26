@@ -23,9 +23,9 @@
             android:layout_width="0dp"
             android:layout_height="450dp"
 
-            android:layout_marginLeft="30dp"
+            android:layout_marginLeft="32dp"
             android:layout_marginTop="25dp"
-            android:layout_marginRight="30dp"
+            android:layout_marginRight="32dp"
             android:clipChildren="false"
             android:clipToPadding="false"
             android:paddingTop="30dp"
