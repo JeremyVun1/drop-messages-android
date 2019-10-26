@@ -27,6 +27,12 @@ class VerticalViewPager(context: Context, attrs: AttributeSet?): ViewPager(conte
         return ev
     }
 
+    fun reset() {
+        setPageTransformer(true,
+            VerticalPage()
+        )
+        overScrollMode = View.OVER_SCROLL_NEVER
+    }
 
     override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
         val intercepted: Boolean = super.onInterceptTouchEvent(swapXY(ev))

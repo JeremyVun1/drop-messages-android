@@ -5,10 +5,10 @@
     android:id="@+id/test_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/colorPrimaryDark"
     android:clipChildren="false"
     android:clipToPadding="false"
     android:orientation="vertical"
-    android:background="@color/colorPrimaryDark"
     tools:context=".TestActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -23,9 +23,9 @@
             android:layout_width="0dp"
             android:layout_height="450dp"
 
-            android:layout_marginLeft="30dp"
-            android:layout_marginTop="15dp"
-            android:layout_marginRight="30dp"
+            android:layout_marginLeft="25dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginRight="25dp"
             android:clipChildren="false"
             android:clipToPadding="false"
             android:paddingTop="30dp"
@@ -50,67 +50,79 @@
             app:layout_constraintStart_toStartOf="parent">
 
             <TableRow
+                style="?android:attr/buttonBarStyle"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                style="?android:attr/buttonBarStyle"
                 android:gravity="center">
 
-                <ImageButton
+                <Button
                     android:id="@+id/btn_get_top"
+                    style="@style/nav_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    style="?android:attr/buttonBarButtonStyle"
-                    app:srcCompat="@drawable/ic_mail_black" />
+                    android:drawableTop="@drawable/ic_mail_black"
+                    android:text="@string/top_drops_label"
+                    android:textAppearance="@style/nav_button" />
 
-                <ImageButton
+                <Button
                     android:id="@+id/btn_get_latest"
+                    style="@style/nav_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    style="?android:attr/buttonBarButtonStyle"
-                    app:srcCompat="@drawable/ic_mail_black" />
+                    android:drawableTop="@drawable/ic_mail_black"
+                    android:text="@string/latest_drops_label"
+                    android:textAppearance="@style/nav_button"/>
 
-                <ImageButton
+                <Button
                     android:id="@+id/btn_create_drop"
+                    style="@style/nav_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    style="?android:attr/buttonBarButtonStyle"
-                    app:srcCompat="@drawable/ic_mail_create" />
+                    android:drawableTop="@drawable/ic_mail_create"
+                    android:text="@string/create_drop_label"
+                    android:textAppearance="@style/nav_button"/>
             </TableRow>
 
             <TableRow
+                style="?android:attr/buttonBarStyle"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                style="?android:attr/buttonBarStyle"
                 android:gravity="center">
 
-                <ImageButton
+                <Button
                     android:id="@+id/btn_get_random"
+                    style="@style/nav_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    style="?android:attr/buttonBarButtonStyle"
-                    app:srcCompat="@drawable/ic_mail_black" />
+                    android:drawableTop="@drawable/ic_mail_black"
+                    android:text="@string/random_drops_label"
+                    android:textAppearance="@style/nav_button"/>
 
-                <ImageButton
+                <Button
                     android:id="@+id/btn_map"
+                    style="@style/nav_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    style="?android:attr/buttonBarButtonStyle"
-                    app:srcCompat="@drawable/ic_mail_black" />
+                    android:drawableTop="@drawable/ic_mail_black"
+                    android:text="@string/map_label"
+                    android:textAppearance="@style/nav_button"/>
 
-                <ImageButton
+                <Button
                     android:id="@+id/btn_my_drops"
+                    style="@style/nav_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    style="?android:attr/buttonBarButtonStyle"
-                    app:srcCompat="@drawable/ic_person_black" />
+                    android:drawableTop="@drawable/ic_person_black"
+                    android:text="@string/my_drops_label"
+                    android:textAppearance="@style/nav_button"/>
             </TableRow>
 
         </TableLayout>

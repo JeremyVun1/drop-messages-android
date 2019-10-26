@@ -82,6 +82,7 @@ class DropMessagesActivity : AppCompatActivity() {
 
             pageAdapater.setFragments(new_frags)
 
+            pager.reset()
             pager.adapter = pageAdapater
         }
 
@@ -99,6 +100,7 @@ class DropMessagesActivity : AppCompatActivity() {
 
             pageAdapater.setFragments(new_frags)
 
+            pager.reset()
             pager.adapter = pageAdapater
         }
     }
