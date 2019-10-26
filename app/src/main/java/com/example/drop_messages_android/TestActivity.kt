@@ -11,6 +11,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.example.drop_messages_android.fragments.TestFragment
+import com.example.drop_messages_android.fragments.TestFragmentSmall
 import com.example.drop_messages_android.viewpager.VerticalPageAdapter
 import com.google.android.gms.location.LocationServices
 import kotlinx.android.synthetic.main.activity_test.*
@@ -27,10 +28,10 @@ class TestActivity: AppCompatActivity() {
     }
 
     private fun initTestUI() {
-        val fragA = TestFragment()
-        val fragB = TestFragment()
-        val fragC = TestFragment()
-        val fragD = TestFragment()
+        val fragA = TestFragmentSmall()
+        val fragB = TestFragmentSmall()
+        val fragC = TestFragmentSmall()
+        val fragD = TestFragmentSmall()
 
         val fragments = arrayOf<Fragment>(
             fragA,
@@ -44,6 +45,7 @@ class TestActivity: AppCompatActivity() {
             supportFragmentManager
         )
         fragment_container.adapter = verticalPageAdapter
+        //fragment_container.pageMargin = -70
         fragment_container.offscreenPageLimit = 10
     }
 }

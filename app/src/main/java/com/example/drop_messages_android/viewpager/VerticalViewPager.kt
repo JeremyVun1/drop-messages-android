@@ -95,6 +95,9 @@ class VerticalViewPager(context: Context, attrs: AttributeSet?): ViewPager(conte
         }
 
 
+        /**
+         * Ugly state machine for creating the card stack behaviour
+         */
         override fun transformPage(page: View, position: Float) {
             if (!pageState.containsKey(page)) {
                 pageState[page] = PageState(PageViewState.CURRENT, 0f)
@@ -105,7 +108,9 @@ class VerticalViewPager(context: Context, attrs: AttributeSet?): ViewPager(conte
                 starting = false
             }
 
-            // Card is now at the top
+            /**
+             * Card is now at the top
+             */
             if (position <= -0.8) {
                 val ps = pageState[page]
                 page.alpha = 1f
@@ -120,7 +125,9 @@ class VerticalViewPager(context: Context, attrs: AttributeSet?): ViewPager(conte
                 page.translationX = page.width * -position
             }
 
-            // Card is now between top and current
+            /**
+             * Card is transitioning between top and current item
+             */
             else if (position < 0) {
                 val ps = pageState[page]
 
@@ -129,7 +136,7 @@ class VerticalViewPager(context: Context, attrs: AttributeSet?): ViewPager(conte
                     //take card off the top stack
                     ps.state = PageViewState.TOP_TRANSITION
                     ps.margin = 0f
-                    page.elevation = 15f
+                    page.elevation = 20f - (position * 20f)
                     pushTopStack(page, -1)
                 }
 
@@ -137,7 +144,7 @@ class VerticalViewPager(context: Context, attrs: AttributeSet?): ViewPager(conte
                 else if (ps.state == PageViewState.CURRENT) {
                     ps.state = PageViewState.TOP_TRANSITION
                     ps.margin = 0f
-                    page.elevation = 30f
+                    page.elevation = 20f - (position * 20f)
                 }
 
                 page.alpha = (1+(position/3)) + 0.15f
@@ -146,7 +153,9 @@ class VerticalViewPager(context: Context, attrs: AttributeSet?): ViewPager(conte
                 page.translationY = (position * page.height)
             }
 
-            // card is in current position
+            /**
+             * Card is now at the current item position
+             */
             else if (position == 0f) {
                 val ps = pageState[page]
                 page.alpha = 1f
@@ -171,7 +180,9 @@ class VerticalViewPager(context: Context, attrs: AttributeSet?): ViewPager(conte
                 page.translationY = -MAX_MARGIN * page.height
             }
 
-            // card is at the bottom
+            /**
+             * Card is now at the bottom
+             */
             else {
                 val ps = pageState[page]
 

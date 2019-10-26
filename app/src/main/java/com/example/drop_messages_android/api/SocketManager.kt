@@ -2,7 +2,6 @@ package com.example.drop_messages_android.api
 
 import android.app.Application
 import com.example.drop_messages_android.R
-import com.example.drop_messages_android.location.Geolocation
 import com.tinder.scarlet.Scarlet
 import com.tinder.scarlet.lifecycle.android.AndroidLifecycle
 import com.tinder.scarlet.messageadapter.gson.GsonMessageAdapter

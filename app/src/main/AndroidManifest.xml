@@ -14,10 +14,17 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
+        <!-- for testing stuff -->
+        <activity android:name=".TestActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
         <!-- Main loading screen for routing user, authenticating,
         and makine web socket connections on app start up -->
         <activity android:name=".MainLoaderActivity" android:noHistory="true">
-
         </activity>
 
         <!-- Sign up, sign in, index -->
@@ -28,14 +35,6 @@
 
         <!-- No internet error activity -->
         <activity android:name=".NoInternetActivity"></activity>
-
-        <!-- for testing stuff -->
-        <activity android:name=".TestActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
 
         <meta-data
             android:name="preloaded_fonts"
