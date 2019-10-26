@@ -23,7 +23,7 @@ class TestFragmentSmall : Fragment() {
 
         val rnd = Random()
 
-        rootView.tv_output.text = rnd.nextInt(20).toString()
+        //rootView.tv_output.text = rnd.nextInt(20).toString()
 
         return rootView
     }
