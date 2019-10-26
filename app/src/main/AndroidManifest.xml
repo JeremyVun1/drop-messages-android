@@ -26,14 +26,16 @@
 
         <!-- Sign up, sign in, index -->
         <activity android:name=".UserFrontActivity">
+
+        </activity>
+
+        <!-- The main user activity where they can do the stuff -->
+        <activity android:name=".DropMessagesActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <!-- The main user activity where they can do the stuff -->
-        <activity android:name=".DropMessagesActivity"></activity>
 
         <!-- No internet error activity -->
         <activity android:name=".NoInternetActivity"></activity>

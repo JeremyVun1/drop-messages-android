@@ -9,6 +9,7 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.example.drop_messages_android.api.*
+import com.example.drop_messages_android.fragments.TestFragmentSmall
 import com.example.drop_messages_android.viewpager.VerticalPageAdapter
 import com.tinder.scarlet.WebSocket
 import kotlinx.android.synthetic.main.activity_drop_messages.*
@@ -40,7 +41,14 @@ class DropMessagesActivity : AppCompatActivity() {
     }
 
     private fun initialiseUI() {
-        val fragments = arrayOf<Fragment>()
+        val fragments = arrayOf<Fragment>(
+            TestFragmentSmall(),
+            TestFragmentSmall(),
+            TestFragmentSmall(),
+            TestFragmentSmall(),
+            TestFragmentSmall(),
+            TestFragmentSmall()
+        )
         val verticalPageAdapter = VerticalPageAdapter(
             fragments,
             supportFragmentManager
@@ -56,7 +64,7 @@ class DropMessagesActivity : AppCompatActivity() {
         initAnimations()
 
         CoroutineScope(IO).launch {
-            setupSocketHandlers()
+            //setupSocketHandlers()
         }
     }
 
@@ -64,16 +72,14 @@ class DropMessagesActivity : AppCompatActivity() {
      * handling of different socket REQUEST & RESPONSES messages
      */
     private suspend fun setupSocketHandlers() {
-        // do error and permission checking in main context
-        withContext(Main) {
-            if (!Util.hasInternet(applicationContext))
-                navToNoInternet()
+        if (!Util.hasInternet(applicationContext))
+            navToNoInternet()
 
-            socket = SocketManager.getWebSocket()
-            if (socket == null) {
-                Log.e("ERROR", "Cannot use a null socket")
-                navToMainLoader()
-            }
+        socket = SocketManager.getWebSocket()
+        if (socket == null) {
+            Log.e("ERROR", "Cannot use a null socket")
+            println("SOCKET IS NULL ERROR")
+            navToMainLoader()
         }
 
         /**
