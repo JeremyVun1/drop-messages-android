@@ -2,7 +2,9 @@
     <!-- General -->
     <string name="app_name">drop-messages-android</string>
     <string name="app_name_formatted">Drop Messages</string>
-    <string name="placeholder">Lorum Ipsum</string>
+    <string name="placeholder">Lorem Ipsum</string>
+    <string name="placeholder_long">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Laoreet non sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Laoreet non</string>
+    <string name="placeholder_number">10</string>
     <string name="logo_content_desc">Drop Message Logo</string>
 
     <!-- Sign up / Sign in -->

@@ -29,17 +29,28 @@
         android:stateListAnimator="@null">
 
         <TableLayout
+            android:id="@+id/message_container"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="0dp"
+            android:layout_marginStart="30dp"
+            android:layout_marginTop="100dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginBottom="32dp"
+            app:layout_constraintBottom_toTopOf="@+id/linearLayout5"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
             <TableRow
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:orientation="vertical">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_weight="0.8"
+                    android:layout_weight="10"
                     android:orientation="vertical">
 
                     <TableRow
@@ -48,89 +59,125 @@
 
                         <TextView
                             android:id="@+id/tv_author"
+                            style="@style/LargeDarkText"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="TextView" />
+                            android:layout_weight="0.8"
+                            android:text="@string/placeholder" />
 
                         <TextView
                             android:id="@+id/tv_date"
+                            style="@style/MessageSubText"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="TextView" />
+                            android:text="@string/placeholder"
+                            android:textAlignment="viewEnd"
+                            android:textAppearance="@style/MessageSubText" />
                     </TableRow>
 
                     <ImageView
                         android:id="@+id/header_line"
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
-                        app:srcCompat="@drawable/tbl_white_outline_b" />
+                        android:layout_marginTop="2dp"
+                        android:layout_marginBottom="12dp"
+                        android:alpha="0.8"
+                        app:srcCompat="@drawable/grey_line_horizontal" />
 
                     <TextView
                         android:id="@+id/tv_drop_message"
+                        style="@style/MessageBodyText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="TextView" />
+                        android:text="@string/placeholder_long" />
 
                     <TextView
                         android:id="@+id/tv_seen_count"
+                        style="@style/MessageSubText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="TextView" />
+                        android:layout_marginTop="10dp"
+                        android:text="@string/placeholder" />
 
                 </LinearLayout>
 
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    android:layout_width="match_parent"
+                <LinearLayout
+                    android:layout_width="wrap_content"
                     android:layout_height="match_parent"
-                    android:layout_weight="0.2">
+                    android:layout_weight="0"
+                    android:orientation="vertical">
 
                     <Button
                         android:id="@+id/btn_share"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
-                        android:background="@drawable/ic_btn_share" />
+                        android:layout_marginStart="5dp"
+                        android:layout_marginBottom="20dp"
+                        android:background="@drawable/ic_btn_share"
+                        android:elevation="0dp" />
 
                     <Button
                         android:id="@+id/btn_upvote"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_marginStart="15dp"
                         android:background="@drawable/ic_vote_arrow_up"
-                        android:text="Button" />
+                        android:elevation="0dp" />
 
                     <TextView
                         android:id="@+id/tv_vote_count"
+                        style="@style/VotesText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="TextView" />
+                        android:layout_marginStart="15dp"
+                        android:elevation="0dp"
+                        android:text="@string/placeholder_number" />
 
                     <Button
                         android:id="@+id/btn_downvote"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_marginStart="15dp"
                         android:background="@drawable/ic_vote_arrow_down"
-                        android:text="Button" />
-                </androidx.constraintlayout.widget.ConstraintLayout>
+                        android:elevation="0dp"
+                        tools:layout_editor_absoluteX="0dp"
+                        tools:layout_editor_absoluteY="39dp" />
+                </LinearLayout>
 
-            </TableRow>
-
-            <TableRow
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" >
-
-                <TextView
-                    android:id="@+id/tv_date_label"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TextView" />
-
-                <TextView
-                    android:id="@+id/tv_geoloc_label"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TextView" />
             </TableRow>
 
         </TableLayout>
+
+        <LinearLayout
+            android:id="@+id/linearLayout5"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="16dp"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <TextView
+                android:id="@+id/tv_date_label"
+                style="@style/RegularWhiteText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/placeholder" />
+
+            <TextView
+                android:id="@+id/tv_geoloc_label"
+                style="@style/RegularWhiteText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="end"
+                android:text="@string/placeholder" />
+        </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>

@@ -19,7 +19,7 @@ class TestFragmentSmall : Fragment() {
     ): View? {
 
 
-        val rootView = inflater.inflate(R.layout.card_test_small, container, false) as ViewGroup
+        val rootView = inflater.inflate(R.layout.card_drop_fragment, container, false) as ViewGroup
 
         val rnd = Random()
 

@@ -40,7 +40,7 @@
     </style>
 
 
-    <!-- Font colors -->
+    <!-- Font styles -->
     <style name="DarkHintText" parent="@style/RegularText">
         <item name="android:textColor">@color/colorDarkHint</item>
     </style>
@@ -73,7 +73,7 @@
     <style name="MessageBodyText" parent="@style/RegularText">
         <item name="android:textColor">@color/colorPrimaryDark</item>
     </style>
-    <style name="MessageSubText" parent="@style/RegularText">
+    <style name="MessageSubText" parent="@style/SmallText">
         <item name="android:textColor">@color/colorLightSubText</item>
     </style>
     <style name="VotesText" parent="@style/MediumText">
