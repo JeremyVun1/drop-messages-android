@@ -1,14 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:clipChildren="false"
     android:clipToPadding="false"
-    android:elevation="6dp"
-    android:stateListAnimator="@null"
-    android:background="@drawable/ic_drop_card_small">
+    android:elevation="0dp"
+    android:stateListAnimator="@null">
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:srcCompat="@drawable/ic_drop_card_small"
+        android:elevation="2dp"
+        android:background="@drawable/shadow_small"
+        android:stateListAnimator="@null"/>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/content_container"
@@ -16,7 +23,6 @@
         android:layout_height="match_parent"
 
         android:clipChildren="false"
-
         android:clipToPadding="false"
         android:elevation="2dp"
         android:stateListAnimator="@null">

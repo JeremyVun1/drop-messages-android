@@ -21,17 +21,16 @@
         <com.example.drop_messages_android.viewpager.VerticalViewPager
             android:id="@+id/fragment_container"
             android:layout_width="0dp"
-            android:layout_height="500dp"
+            android:layout_height="450dp"
 
-
-            android:layout_marginLeft="25dp"
-            android:layout_marginTop="30dp"
-            android:layout_marginRight="25dp"
-            android:background="@color/colorPrimaryDark"
+            android:layout_marginLeft="30dp"
+            android:layout_marginTop="25dp"
+            android:layout_marginRight="30dp"
             android:clipChildren="false"
             android:clipToPadding="false"
-            android:paddingTop="35dp"
-            android:paddingBottom="45dp"
+            android:paddingTop="30dp"
+            android:paddingBottom="50dp"
+
             app:layout_constraintBottom_toTopOf="@+id/btn_panel_container"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"

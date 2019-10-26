@@ -45,7 +45,7 @@ class TestActivity: AppCompatActivity() {
             supportFragmentManager
         )
         fragment_container.adapter = verticalPageAdapter
-        //fragment_container.pageMargin = -70
+        //fragment_container.pageMargin = -80
         fragment_container.offscreenPageLimit = 10
     }
 }
