@@ -51,11 +51,6 @@ class UserFrontActivity : AppCompatActivity(), RegisterFragment.RegisterUserList
         fragment_container.offscreenPageLimit = 10
     }
 
-    // login the user (get auth token and make a websocket connection)
-    private fun login(model: GetTokenModel) {
-        // do stuff
-    }
-
 
     /////////////////////
     // Fragment callbacks
@@ -202,29 +197,5 @@ class UserFrontActivity : AppCompatActivity(), RegisterFragment.RegisterUserList
         val textColor =ContextCompat.getColor(applicationContext, R.color.colorLightHint)
 
         snack.setActionTextColor(actionColor).setTextColor(textColor).show()
-    }
-
-    /////////////////////
-    // TESTING VERTICAL VIEW PAGER CARD STACK
-    /////////////////////
-    private fun initTestUI() {
-        val fragA = TestFragment()
-        val fragB = TestFragment()
-        val fragC = TestFragment()
-        val fragD = TestFragment()
-
-        val fragments = arrayOf<Fragment>(
-            fragA,
-            fragB,
-            fragC,
-            fragD
-        )
-
-        val verticalPageAdapter = VerticalPageAdapter(
-            fragments,
-            supportFragmentManager
-        )
-        fragment_container.adapter = verticalPageAdapter
-        fragment_container.offscreenPageLimit = 10
     }
 }

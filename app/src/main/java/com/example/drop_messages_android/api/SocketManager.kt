@@ -11,10 +11,52 @@ import com.tinder.scarlet.streamadapter.rxjava2.RxJava2StreamAdapterFactory
 import com.tinder.scarlet.websocket.okhttp.newWebSocketFactory
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
+import com.tinder.scarlet.Lifecycle
+import com.tinder.scarlet.ShutdownReason
+import com.tinder.scarlet.lifecycle.LifecycleRegistry
 
-object DropMessageServiceFactory {
 
-    fun createSocket(application: Application, loc: Geolocation): DropMessageService {
+/**
+ * lateinit singleton for persisting our web socket over activities
+ * Better than parcelable alternative
+ */
+object SocketManager {
+    private lateinit var socket: DropMessageService
+    private lateinit var application: Application
+    private lateinit var lifecycleSwitch: LifecycleRegistry
+
+    fun init(app: Application, loc: Geolocation) : SocketManager {
+        if (::socket.isInitialized)
+            return this
+        else {
+            application = app
+            lifecycleSwitch = LifecycleRegistry(0L)
+            socket = createSocket(loc)
+        }
+        return this
+    }
+
+    fun changeSocket(loc: Geolocation) {
+        closeSocket()
+        socket = createSocket(loc)
+    }
+
+    fun getWebSocket() : DropMessageService? {
+        if (::socket.isInitialized)
+            return socket
+        return null
+    }
+
+    fun closeSocket() {
+        lifecycleSwitch.onNext(Lifecycle.State.Stopped.WithReason(ShutdownReason.GRACEFUL))
+    }
+
+    private fun openSocket() {
+        lifecycleSwitch.onNext(Lifecycle.State.Started)
+    }
+
+
+    fun createSocket(loc: Geolocation): DropMessageService {
         val socketUrl = "${application.resources.getString(R.string.web_socket_url)}${loc.formattedString()}/"
         println("websocket created to $socketUrl")
 
@@ -25,6 +67,7 @@ object DropMessageServiceFactory {
             .build()
 
         val lifecycle = AndroidLifecycle.ofApplicationForeground(application)
+            .combineWith(lifecycleSwitch)
 
         val backoffStrategy = ExponentialWithJitterBackoffStrategy(5000, 5000)
 
@@ -35,6 +78,7 @@ object DropMessageServiceFactory {
             .addStreamAdapterFactory(RxJava2StreamAdapterFactory())
             .backoffStrategy(backoffStrategy)
             .build()
-        return scarlet.create()
+        socket = scarlet.create()
+        return socket
     }
 }

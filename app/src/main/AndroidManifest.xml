@@ -14,25 +14,27 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <!-- Main loading screen for routing user based on saved login information -->
+        <!-- Main loading screen for routing user, authenticating,
+        and makine web socket connections on app start up -->
         <activity android:name=".MainLoaderActivity" android:noHistory="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
 
         <!-- Sign up, sign in, index -->
-        <activity android:name=".UserFrontActivity">
-        </activity>
+        <activity android:name=".UserFrontActivity"></activity>
 
-        <!-- Test Activity -->
+        <!-- The main user activity where they can do the stuff -->
+        <activity android:name=".DropMessagesActivity"></activity>
+
+        <!-- No internet error activity -->
+        <activity android:name=".NoInternetActivity"></activity>
+
+        <!-- for testing stuff -->
         <activity android:name=".TestActivity">
-        </activity>
-
-        <activity android:name=".NoInternetActivity">
-
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
 
         <meta-data

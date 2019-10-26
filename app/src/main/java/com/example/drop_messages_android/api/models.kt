@@ -1,5 +1,8 @@
 package com.example.drop_messages_android.api
 
+import android.os.Parcelable
+import kotlinx.android.parcel.Parcelize
+
 // All the network models for messaging with our network api
 // TODO - simplify all of this
 
@@ -9,6 +12,21 @@ data class SignInModel(val username: String?, val password: String?, val token: 
 data class GetTokenModel(val username: String, val password: String)
 data class TokenResponseModel(val token: String)
 data class InvalidLoginResponseModel(val non_field_errors: Array<String>)
+
+// client models
+@Parcelize
+data class UserModel(val username: String?, val password: String?, var token: String?, var location: Geolocation?) : Parcelable
+
+@Parcelize
+data class Geolocation(var lat: Double, var long: Double) : Parcelable {
+    fun formattedString(dp: Int = 2): String {
+        return "${"%.${dp}f".format(lat)},${"%.${dp}f".format(lat)}"
+    }
+
+    fun isValid(): Boolean {
+        return (lat >= -90 && lat <= 90 && long >= -180 && long <= 180)
+    }
+}
 
 // web socket
 // send models

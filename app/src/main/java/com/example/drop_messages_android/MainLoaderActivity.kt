@@ -7,7 +7,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.location.Location
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -17,8 +16,6 @@ import android.view.animation.OvershootInterpolator
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.drop_messages_android.api.*
-import com.example.drop_messages_android.location.Geolocation
-import com.google.android.gms.location.LocationServices
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.tinder.scarlet.WebSocket
@@ -37,6 +34,7 @@ import kotlinx.coroutines.withContext
 class MainLoaderActivity : AppCompatActivity() {
 
     var waitingForPermissions = false
+    var userModel : UserModel? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,132 +72,139 @@ class MainLoaderActivity : AppCompatActivity() {
      *      - route to MainActivity
      */
     private suspend fun handleRouting() {
-        withContext(Main) {
-            val userDetails = getUserDetails()
+        withContext(IO) {
+            setLoadingTextAsync("Finding User Details")
+            userModel = UserStorageManager.getUserDetails(applicationContext)
 
             when {
+                // no internet connection error
                 !Util.hasInternet(applicationContext) -> {
                     navToNoInternet()
                 }
-                userDetails == null -> {
-
-                    withContext(IO) {
-                        setLoadingTextAsync("Welcome first time user!")
-                        delay(1200)
-                    }
+                // no user details, route to user front activity
+                userModel == null -> {
+                    setLoadingTextAsync("Welcome first time user!")
+                    delay(1200)
                     navToUserFront()
                 }
-                userDetails.token == null -> {
-                    println("ROUTE getting tokens")
-                    print("user details: $userDetails")
-                    getToken(userDetails)
+                // get a jwt from server
+                userModel!!.token == null -> {
+                    fetchJsonWebToken()
                 }
+                // we have a user and a token
                 else -> {
-                    println("ROUTE making web socket connection")
-                    setupConnection(userDetails.token)
+                    setLoadingText("Fetching current location")
+                    val locationManager = LocationManager(applicationContext)
+                    locationManager.updateLocation(::onLocationReceived)
                 }
             }
         }
     }
 
-    private suspend fun getToken(model: SignInModel) {
+    private suspend fun fetchJsonWebToken() {
         setLoadingTextAsync("Fetching Authentication Token")
 
-        withContext(IO) {
-            val url = resources.getString(R.string.get_token_url)
-            val gson = Gson()
-            val json = gson.toJson(GetTokenModel(model.username as String, model.password as String))
+        val url = resources.getString(R.string.get_token_url)
+        val gson = Gson()
+        val json = gson.toJson(GetTokenModel(userModel!!.username as String, userModel!!.password as String))
 
-            Postie().sendPostRequest(applicationContext, url, json,
-                {
-                    val response = gson.fromJson(it.toString(), JsonObject::class.java)
-                    if (response.has("token")) {
-                        setLoadingText("Token received!")
-                        println("JWT response: ${response["token"]}")
+        Postie().sendPostRequest(applicationContext, url, json,
+            {
+                val response = gson.fromJson(it.toString(), JsonObject::class.java)
+                if (response.has("token")) {
+                    setLoadingText("Token received!")
+                    println("JWT response: ${response["token"]}")
 
-                        CoroutineScope(Main).launch {
-                            val token = response["token"]
-                                .toString()
-                                .removePrefix("\"")
-                                .removeSuffix("\"")
+                    CoroutineScope(Main).launch {
+                        //strip any " chars pended on by the api server
+                        val token = response["token"]
+                            .toString()
+                            .removePrefix("\"")
+                            .removeSuffix("\"")
 
-                            val sp = getSharedPreferences("Login", Context.MODE_PRIVATE)
-                            sp.edit().putString("token", token).commit()
-                            println(sp.getString("token", null))
+                        val sp = getSharedPreferences("Login", Context.MODE_PRIVATE)
+                        sp.edit().putString("token", token).commit()
 
-                            // connect the web socket
-                            setupConnection(token)
-                        }
+                        userModel!!.token = token
+
+                        setLoadingText("Fetching current location")
+                        val locationManager = LocationManager(applicationContext)
+                        locationManager.updateLocation(::onLocationReceived)
                     }
-                    else {
-                        CoroutineScope(Default).launch {
-                            setLoadingTextAsync("Failed to get Token")
-                            delay(2000)
-                            navToUserFront()
-                        }
-                    }
-                },
-                {
-                    Log.e("POST", it.toString())
-                    Toast.makeText(applicationContext, it.toString(), Toast.LENGTH_SHORT).show()
                 }
-            )
-        }
+                else {
+                    CoroutineScope(Default).launch {
+                        setLoadingTextAsync("Failed to get Token")
+                        delay(2000)
+                        navToUserFront()
+                    }
+                }
+            },
+            {
+                Log.e("POST", it.toString())
+                Toast.makeText(applicationContext, it.toString(), Toast.LENGTH_SHORT).show()
+            }
+        )
     }
 
-    private suspend fun setupConnection(token: String) {
-        setLoadingTextAsync("Connecting to server")
 
-        withContext(IO) {
-            if (hasLocationPermissions()) {
-                connect(token, Geolocation(1.0,1.0))
+    // event listener for location manager
+    private fun onLocationReceived(location: Geolocation) {
+        userModel!!.location = location
+        setupConnection()
+    }
+
+    private fun setupConnection() {
+        CoroutineScope(IO).launch {
+            if (userModel!!.token == null) {
+                setLoadingTextAsync("Token not found")
+                delay(1000)
+                navToUserFront()
             }
             else {
-                val flp = LocationServices.getFusedLocationProviderClient(applicationContext)
-                flp.lastLocation.addOnSuccessListener {
-                    CoroutineScope(IO).launch {
-                        connect(token, Geolocation(it.latitude, it.longitude))
-                    }
-                }
+                setLoadingTextAsync("Connecting to server")
+                println("CONNECTING THE WEB SOCKET")
+
+                // initialise our socket singleton
+                val socket = SocketManager
+                    .init(application, userModel!!.location as Geolocation)
+                    .createSocket(userModel!!.location as Geolocation)
+
+                // send authentication token as soon as web socket is opened
+                socket.observeWebSocketEvent()
+                    .filter { it is WebSocket.Event.OnConnectionOpened<*> }
+                    .subscribe {
+                        socket.authenticate(AuthenticateSocket(userModel!!.token as String))
+                        println("<<[SND]attempt socket auth: ${userModel!!.token}")
+                    }.dispose()
+
+                // observe response from the token authentication
+                socket.observeSocketResponse()
+                    .subscribe {
+                        println(">>[REC]: $it")
+                        if (it.category == "socket" && it.data == "open") {
+                            println("SOCKET AUTHENTICATED")
+
+                            CoroutineScope(Default).launch {
+                                setLoadingText("Connection established")
+
+                                delay(1000)
+                                navToDropMessagesActivity()
+                            }
+                        }
+                        // failed token authentication for whatever reason
+                        else {
+                            CoroutineScope(Default).launch {
+                                setLoadingText("Connection failed")
+
+                                SocketManager.closeSocket()
+                                delay(1000)
+                                navToUserFront()
+                            }
+                        }
+                    }.dispose()
             }
         }
-    }
-
-    private suspend fun connect(token: String, loc: Geolocation) {
-        // do connection stuff here
-        val socket = DropMessageServiceFactory.createSocket(application, loc)
-        println("CONNECT WAS CALLED")
-        socket.observeWebSocketEvent()
-            .filter { it is WebSocket.Event.OnConnectionOpened<*> }
-            .subscribe {
-                socket.authenticate(AuthenticateSocket(token))
-                println("<<[SND]attempt socket auth: $token")
-            }
-
-        socket.observeSocketResponse()
-            .subscribe {
-                println(">>[REC]: $it")
-            }
-    }
-
-    private suspend fun getUserDetails() : SignInModel? {
-        setLoadingTextAsync("Finding User Details")
-        var result : SignInModel? = null
-
-        withContext(IO) {
-            val sp = getSharedPreferences("Login", Context.MODE_PRIVATE)
-            val username = sp.getString("username", null)
-            val encryptedPassword = sp.getString("password", null)
-            val token = sp.getString("token", null)
-
-            if (username != null && encryptedPassword != null) {
-                val alias = username.toLowerCase().hashCode().toString()
-                val password = UserStorageManager.decrypt(alias, encryptedPassword, applicationContext)
-                result = SignInModel(username, password, token)
-            }
-        }
-
-        return result
     }
 
     /**
@@ -224,10 +229,6 @@ class MainLoaderActivity : AppCompatActivity() {
             waitingForPermissions = true
             requestPermissions(permissions.toTypedArray(), 1)
         }
-    }
-
-    private suspend fun hasLocationPermissions() : Boolean {
-        return hasPermission(permission.ACCESS_COARSE_LOCATION) && hasPermission(permission.ACCESS_FINE_LOCATION)
     }
 
     private suspend fun hasPermission(permission: String) : Boolean {
@@ -271,6 +272,14 @@ class MainLoaderActivity : AppCompatActivity() {
             val i = Intent(applicationContext, NoInternetActivity::class.java)
             startActivity(i)
         }
+    }
+
+    private fun navToDropMessagesActivity() {
+        val i = Intent(applicationContext, DropMessagesActivity::class.java)
+        i.putExtra("user", userModel)
+
+        startActivity(i)
+        finish() // back button should not come back to the main loader
     }
 
     /**

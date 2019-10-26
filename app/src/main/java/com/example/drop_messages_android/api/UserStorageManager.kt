@@ -6,6 +6,8 @@ import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
 import android.util.Log
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.withContext
 import java.security.KeyStore
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
@@ -92,5 +94,25 @@ object UserStorageManager {
             Log.e("ENCRYPT", Log.getStackTraceString(ex))
             return null
         }
+    }
+
+    suspend fun getUserDetails(context: Context) : UserModel? {
+        var result: UserModel? = null
+
+        withContext(IO) {
+            val sp = context.getSharedPreferences("Login", Context.MODE_PRIVATE)
+            val username = sp.getString("username", null)
+            val encryptedPassword = sp.getString("password", null)
+            val token = sp.getString("token", null)
+
+            if (username != null && encryptedPassword != null) {
+                val alias = username.toLowerCase().hashCode().toString()
+                val password =
+                    UserStorageManager.decrypt(alias, encryptedPassword, context)
+                result = UserModel(username=username, password=password, token=token, location=null)
+            }
+        }
+
+        return result
     }
 }
