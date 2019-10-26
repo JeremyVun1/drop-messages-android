@@ -19,7 +19,7 @@
         android:orientation="vertical">
 
         <com.example.drop_messages_android.viewpager.VerticalViewPager
-            android:id="@+id/fragment_container"
+            android:id="@+id/pager"
             android:layout_width="0dp"
             android:layout_height="450dp"
 
@@ -43,7 +43,6 @@
             android:layout_height="130dp"
             android:background="@drawable/bottom_btns_frame"
             android:elevation="10dp"
-            android:gravity="center"
             android:stateListAnimator="@null"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -52,54 +51,66 @@
 
             <TableRow
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                style="?android:attr/buttonBarStyle"
+                android:gravity="center">
 
-                <Button
-                    android:id="@+id/button7"
+                <ImageButton
+                    android:id="@+id/btn_get_top"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Button" />
+                    style="?android:attr/buttonBarButtonStyle"
+                    app:srcCompat="@drawable/ic_mail_black" />
 
-                <Button
-                    android:id="@+id/button8"
+                <ImageButton
+                    android:id="@+id/btn_get_latest"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Button" />
+                    style="?android:attr/buttonBarButtonStyle"
+                    app:srcCompat="@drawable/ic_mail_black" />
 
-                <Button
-                    android:id="@+id/button9"
+                <ImageButton
+                    android:id="@+id/btn_create_drop"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Button" />
+                    style="?android:attr/buttonBarButtonStyle"
+                    app:srcCompat="@drawable/ic_mail_create" />
             </TableRow>
 
             <TableRow
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                style="?android:attr/buttonBarStyle"
+                android:gravity="center">
 
-                <Button
-                    android:id="@+id/button11"
+                <ImageButton
+                    android:id="@+id/btn_get_random"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Button" />
+                    style="?android:attr/buttonBarButtonStyle"
+                    app:srcCompat="@drawable/ic_mail_black" />
 
-                <Button
-                    android:id="@+id/button10"
+                <ImageButton
+                    android:id="@+id/btn_map"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Button" />
+                    style="?android:attr/buttonBarButtonStyle"
+                    app:srcCompat="@drawable/ic_mail_black" />
 
-                <Button
-                    android:id="@+id/button12"
+                <ImageButton
+                    android:id="@+id/btn_my_drops"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Button" />
+                    style="?android:attr/buttonBarButtonStyle"
+                    app:srcCompat="@drawable/ic_person_black" />
             </TableRow>
 
         </TableLayout>

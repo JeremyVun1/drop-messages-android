@@ -25,7 +25,7 @@ class TestActivity: AppCompatActivity() {
         val fragC = TestFragment()
         val fragD = TestFragment()
 
-        val fragments = arrayOf<Fragment>(
+        val fragments = mutableListOf<Fragment>(
             fragA,
             fragB,
             fragC,

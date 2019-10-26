@@ -44,7 +44,7 @@ class UserFrontActivity : AppCompatActivity(), RegisterFragment.RegisterUserList
         loginFrag = LoginFragment()
 
         val verticalPageAdapter = VerticalPageAdapter(
-            arrayOf(IndexFragment(), regFrag as Fragment, loginFrag as Fragment),
+            mutableListOf(IndexFragment(), regFrag as Fragment, loginFrag as Fragment),
             supportFragmentManager
         )
         fragment_container.adapter = verticalPageAdapter

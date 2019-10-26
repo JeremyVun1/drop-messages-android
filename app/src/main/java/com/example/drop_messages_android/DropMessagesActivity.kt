@@ -37,25 +37,81 @@ class DropMessagesActivity : AppCompatActivity() {
 
         userModel = intent.getParcelableExtra("user")
 
-        initialiseUI()
+        initialiseTestUI()
+        //initialiseUI()
     }
 
-    private fun initialiseUI() {
-        val fragments = arrayOf<Fragment>(
-            TestFragmentSmall(),
-            TestFragmentSmall(),
-            TestFragmentSmall(),
-            TestFragmentSmall(),
+    private fun initialiseTestUI() {
+        val fragments = mutableListOf<Fragment>(
             TestFragmentSmall(),
             TestFragmentSmall()
         )
+        val pageAdapater = VerticalPageAdapter(
+            fragments,
+            supportFragmentManager
+        )
+
+        pager.adapter = pageAdapater
+        pager.offscreenPageLimit = 10
+
+
+        // setup button listeners
+        // test adding a fragment
+        btn_get_top.setOnClickListener {
+            println("adding a fragment")
+            pageAdapater.addFragment(TestFragmentSmall())
+        }
+
+        // test swapping out the fragments
+        btn_create_drop.setOnClickListener {
+            println("swapping with 10 fragments")
+            pager.adapter = null
+
+            val new_frags = mutableListOf<Fragment>(
+                TestFragmentSmall(),
+                TestFragmentSmall(),
+                TestFragmentSmall(),
+                TestFragmentSmall(),
+                TestFragmentSmall(),
+                TestFragmentSmall(),
+                TestFragmentSmall(),
+                TestFragmentSmall(),
+                TestFragmentSmall(),
+                TestFragmentSmall()
+            )
+
+            pageAdapater.setFragments(new_frags)
+
+            pager.adapter = pageAdapater
+        }
+
+        // test swapping out the fragments
+        btn_my_drops.setOnClickListener {
+            println("swapping with 4 fragments")
+            pager.adapter = null
+
+            val new_frags = mutableListOf<Fragment>(
+                TestFragmentSmall(),
+                TestFragmentSmall(),
+                TestFragmentSmall(),
+                TestFragmentSmall()
+            )
+
+            pageAdapater.setFragments(new_frags)
+
+            pager.adapter = pageAdapater
+        }
+    }
+
+    private fun initialiseUI() {
+        val fragments = mutableListOf<Fragment>()
         val verticalPageAdapter = VerticalPageAdapter(
             fragments,
             supportFragmentManager
         )
 
-        fragment_container.adapter = verticalPageAdapter
-        fragment_container.offscreenPageLimit = 10
+        pager.adapter = verticalPageAdapter
+        pager.offscreenPageLimit = 10
     }
 
     override fun onResume() {
