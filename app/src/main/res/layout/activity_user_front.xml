@@ -14,11 +14,8 @@
 
     <com.example.drop_messages_android.viewpager.VerticalViewPager
         android:id="@+id/fragment_container"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-
-        android:layout_marginLeft="18dp"
-        android:layout_marginRight="18dp"
+        android:layout_width="370dp"
+        android:layout_height="602dp"
         android:layout_marginBottom="10dp"
 
         android:clipChildren="false"

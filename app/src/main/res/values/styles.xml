@@ -96,15 +96,15 @@
 
     <!-- buttons -->
     <style name="nav_button" parent="@style/Widget.AppCompat.Button.Borderless">
-        <item name="android:padding">0dp</item>
         <item name="android:capitalize">words</item>
         <item name="android:textColor">@color/colorWhiteText</item>
         <item name="android:textSize">15sp</item>
+        <item name="android:paddingTop">5dp</item>
         <item name="android:fontFamily">@font/roboto</item>
         <item name="android:background">@color/colorPrimary</item>
-        <item name="android:scaleX">0.9</item>
-        <item name="android:scaleY">0.9</item>
-
+        <item name="android:scaleX">1</item>
+        <item name="android:scaleY">1</item>
+        <item name="android:drawablePadding">-5dp</item>
     </style>
 
     <!-- TODO hook up with toolbar style -->
