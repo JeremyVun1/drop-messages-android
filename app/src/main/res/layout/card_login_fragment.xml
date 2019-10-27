@@ -168,10 +168,12 @@
 
         <TextView
             android:id="@+id/tv_card_label"
-            style="@style/card_label"
+            style="@style/CardLabelText"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_marginTop="30dp"
+            android:gravity="bottom"
+            android:paddingBottom="15dp"
             android:text="@string/card_login_label"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

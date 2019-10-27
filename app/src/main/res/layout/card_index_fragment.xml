@@ -85,10 +85,10 @@
 
         <TextView
             android:id="@+id/tv_card_label"
-            style="@style/card_label"
+            style="@style/CardLabelText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
+            android:layout_marginBottom="15dp"
             android:text="@string/card_index_label"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
