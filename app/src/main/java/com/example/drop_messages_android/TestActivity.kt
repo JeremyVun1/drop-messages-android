@@ -20,16 +20,10 @@ class TestActivity: AppCompatActivity() {
     }
 
     private fun initTestUI() {
-        val fragA = TestFragment()
-        val fragB = TestFragment()
-        val fragC = TestFragment()
-        val fragD = TestFragment()
+        val fragA = TestFragment("[{'id': 3, 'lat': 1.0, 'long': 1.0, 'date': '27/10/2019', 'message': 'oihoihoh', 'votes': 1, 'seen': 0}, {'id': 4, 'lat': 1.0, 'long': 1.0, 'date': '27/10/2019', 'message': 'hrrrrrrrrrr', 'votes': 1, 'seen': 0}, {'id': 5, 'lat': 1.0, 'long': 1.0, 'date': '27/10/2019', 'message': 'kjhkljhoijoji', 'votes': 1, 'seen': 0}]")
 
         val fragments = mutableListOf<Fragment>(
-            fragA,
-            fragB,
-            fragC,
-            fragD
+            fragA
         )
 
         val verticalPageAdapter = VerticalPageAdapter(

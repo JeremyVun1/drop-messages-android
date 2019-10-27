@@ -16,6 +16,7 @@ import android.view.animation.OvershootInterpolator
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.drop_messages_android.api.*
+import com.google.android.gms.common.GoogleApiAvailability
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.tinder.scarlet.WebSocket
@@ -51,6 +52,7 @@ class MainLoaderActivity : AppCompatActivity() {
 
         CoroutineScope(Default).launch {
             handlePermissionRequests()
+
             //spin while we wait for user to respond to a potential permission request
             while (waitingForPermissions) { delay(100) }
 
@@ -93,9 +95,9 @@ class MainLoaderActivity : AppCompatActivity() {
                 }
                 // we have a user and a token
                 else -> {
-                    setLoadingText("Fetching current location")
+                    setLoadingTextAsync("Fetching current location")
                     val locationManager = LocationManager(applicationContext)
-                    locationManager.updateLocation(::onLocationReceived)
+                    locationManager.updateLocation(::onLocationReceived, ::onLocationError)
                 }
             }
         }
@@ -129,7 +131,7 @@ class MainLoaderActivity : AppCompatActivity() {
 
                         setLoadingText("Fetching current location")
                         val locationManager = LocationManager(applicationContext)
-                        locationManager.updateLocation(::onLocationReceived)
+                        locationManager.updateLocation(::onLocationReceived, ::onLocationError)
                     }
                 }
                 else {
@@ -151,11 +153,22 @@ class MainLoaderActivity : AppCompatActivity() {
     // event listener for location manager
     private fun onLocationReceived(location: Geolocation) {
         userModel!!.location = location
-        setupConnection()
+        println("location gotten: $location")
+        CoroutineScope(IO).launch {
+            setupConnection(location)
+        }
+    }
+    private fun onLocationError(ex: Exception) {
+        CoroutineScope(IO).launch {
+            Log.e("ERROR", ex.message)
+            setLoadingTextAsync(ex.message as String)
+            delay(2000)
+            finish()
+        }
     }
 
-    private fun setupConnection() {
-        CoroutineScope(IO).launch {
+    private suspend fun setupConnection(location: Geolocation) {
+        println("SETTING UP CONNECTION")
             if (userModel!!.token == null) {
                 setLoadingTextAsync("Token not found")
                 delay(1000)
@@ -167,16 +180,25 @@ class MainLoaderActivity : AppCompatActivity() {
 
                 // initialise our socket singleton
                 val socket = SocketManager
-                    .init(application, userModel!!.location as Geolocation)
-                    .createSocket(userModel!!.location as Geolocation)
+                    .init(application)
+                    .createSocket()
 
+                println("socket obj: {socket}")
+
+                println("SETTING UP BASE SOCKET HANDLERS")
                 // send authentication token as soon as web socket is opened
                 socket.observeWebSocketEvent()
                     .filter { it is WebSocket.Event.OnConnectionOpened<*> }
                     .subscribe {
-                        socket.authenticate(AuthenticateSocket(userModel!!.token as String))
-                        println("<<[SND]attempt socket auth: ${userModel!!.token}")
-                    }.dispose()
+                        socket.authenticate(
+                            AuthenticateSocket(
+                                userModel!!.token as String,
+                                location.lat.toFloat(),
+                                location.long.toFloat()
+                            )
+                        )
+                        println("<<[SND]attempt socket auth: ${userModel!!.token} @${location}")
+                    }
 
                 // observe response from the token authentication
                 socket.observeSocketResponse()
@@ -186,7 +208,7 @@ class MainLoaderActivity : AppCompatActivity() {
                             println("SOCKET AUTHENTICATED")
 
                             CoroutineScope(Default).launch {
-                                setLoadingText("Connection established")
+                                setLoadingTextAsync("Connection established")
 
                                 delay(1000)
                                 navToDropMessagesActivity()
@@ -195,16 +217,17 @@ class MainLoaderActivity : AppCompatActivity() {
                         // failed token authentication for whatever reason
                         else {
                             CoroutineScope(Default).launch {
-                                setLoadingText("Connection failed")
+                                setLoadingTextAsync("Authentication failed")
 
-                                SocketManager.closeSocket()
+                                socket.close(CloseSocket(9))
                                 delay(1000)
                                 navToUserFront()
                             }
                         }
-                    }.dispose()
+                    }
+
+                println("SOCKET HANDLERS SET UP")
             }
-        }
     }
 
     /**

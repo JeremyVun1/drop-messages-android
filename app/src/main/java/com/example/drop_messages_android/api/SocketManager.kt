@@ -22,22 +22,19 @@ import com.tinder.scarlet.lifecycle.LifecycleRegistry
 object SocketManager {
     private lateinit var socket: DropMessageService
     private lateinit var application: Application
-    private lateinit var lifecycleSwitch: LifecycleRegistry
+    //private lateinit var lifecycleSwitch: LifecycleRegistry
 
-    fun init(app: Application, loc: Geolocation) : SocketManager {
-        if (::socket.isInitialized)
+    fun init(app: Application) : SocketManager {
+        if (::socket.isInitialized) {
+            socket.close(CloseSocket(9))
             return this
+        }
         else {
+            //lifecycleSwitch = LifecycleRegistry(0L)
             application = app
-            lifecycleSwitch = LifecycleRegistry(0L)
-            socket = createSocket(loc)
+            socket = createSocket()
         }
         return this
-    }
-
-    fun changeSocket(loc: Geolocation) {
-        closeSocket()
-        socket = createSocket(loc)
     }
 
     fun getWebSocket() : DropMessageService? {
@@ -46,18 +43,17 @@ object SocketManager {
         return null
     }
 
-    fun closeSocket() {
-        lifecycleSwitch.onNext(Lifecycle.State.Stopped.WithReason(ShutdownReason.GRACEFUL))
+    private fun closeSocket() {
+        //lifecycleSwitch.onNext(Lifecycle.State.Stopped.WithReason(ShutdownReason.GRACEFUL))
     }
 
     private fun openSocket() {
-        lifecycleSwitch.onNext(Lifecycle.State.Started)
+        //lifecycleSwitch.onNext(Lifecycle.State.Started)
     }
 
 
-    fun createSocket(loc: Geolocation): DropMessageService {
-        val socketUrl = "${application.resources.getString(R.string.web_socket_url)}${loc.formattedString()}/"
-        println("websocket created to $socketUrl")
+    fun createSocket(): DropMessageService {
+        val socketUrl = "${application.resources.getString(R.string.web_socket_url)}"
 
         val client = OkHttpClient.Builder()
             .connectTimeout(10, TimeUnit.SECONDS)
@@ -66,7 +62,7 @@ object SocketManager {
             .build()
 
         val lifecycle = AndroidLifecycle.ofApplicationForeground(application)
-            .combineWith(lifecycleSwitch)
+            //.combineWith(lifecycleSwitch)
 
         val backoffStrategy = ExponentialWithJitterBackoffStrategy(5000, 5000)
 
@@ -78,6 +74,9 @@ object SocketManager {
             .backoffStrategy(backoffStrategy)
             .build()
         socket = scarlet.create()
+
+        println("websocket created to $socketUrl")
+
         return socket
     }
 }

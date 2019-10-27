@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/linearLayout6"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/pull_down_fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:backgroundTint="@color/colorWhiteText"
+        android:clickable="false"
+        android:elevation="50dp"
+        android:focusable="true"
+        android:scaleX="0.8"
+        android:scaleY="0.8"
+        android:src="@drawable/ic_arrow_down_white"
+        android:tint="#00B90000"
+        app:backgroundTint="@android:color/transparent"
+        app:fabSize="mini"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:maxImageSize="42dp" />
+
+    <TextView
+        android:id="@+id/tv_pull_down_hint"
+        style="@style/MediumWhiteText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:text="@string/pull_down_return_hint"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/pull_down_fab" />
+
+    <TextView
+        android:id="@+id/tv_empty"
+        style="@style/LightHintText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="140dp"
+        android:text="@string/drop_stack_empty"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_pull_down_hint" />
+
+    <TextView
+        android:id="@+id/tv_pull_up_hint"
+        style="@style/MediumWhiteText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="30dp"
+        android:text="@string/pull_up_refresh_hint"
+        app:layout_constraintBottom_toTopOf="@+id/pull_up_fab"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/pull_up_fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        android:backgroundTint="@color/colorWhiteText"
+        android:clickable="false"
+        android:elevation="60dp"
+        android:focusable="true"
+        android:scaleX="0.8"
+        android:scaleY="0.8"
+        android:src="@drawable/ic_arrow_up_white"
+        android:tint="#00B90000"
+        app:backgroundTint="@android:color/transparent"
+        app:fabSize="mini"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:maxImageSize="42dp" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

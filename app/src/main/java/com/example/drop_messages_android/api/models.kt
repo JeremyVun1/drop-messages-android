@@ -2,6 +2,7 @@ package com.example.drop_messages_android.api
 
 import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize
+import java.util.*
 
 // All the network models for messaging with our network api
 // TODO - simplify all of this
@@ -28,15 +29,19 @@ data class Geolocation(var lat: Double, var long: Double) : Parcelable {
     }
 }
 
+data class DropMessage(val id: Int, val lat: Float, val long: Float, val date: String, val votes: Int, val seen: Int)
+data class PostDataResponse(val id: Int, val success: Boolean, val meta: String)
+
 // web socket
 // send models
-data class AuthenticateSocket(val token: String)
+data class AuthenticateSocket(val token: String, val lat: Float, val long: Float)
 data class ChangeGeolocation(val category: Int, val lat: Float, val long: Float)
 data class CreateDrop(val category: Int, val data: String)
 data class RequestDrops(val category: Int, val page: Int)
 data class RequestDropsRange(val category: Int, val data: String, val page: Int)
 data class Upvote(val category: Int, val data: String)
 data class Downvote(val category: Int, val data: String)
+data class CloseSocket(val category: Int)
 
 // response models
 data class SocketResponse(val category: String, val data: String)

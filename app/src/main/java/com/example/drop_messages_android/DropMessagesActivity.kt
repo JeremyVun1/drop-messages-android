@@ -6,16 +6,24 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.viewpager.widget.ViewPager
 import com.example.drop_messages_android.api.*
+import com.example.drop_messages_android.fragments.StackEmptyFragment
 import com.example.drop_messages_android.fragments.TestFragmentSmall
 import com.example.drop_messages_android.viewpager.VerticalPageAdapter
+import com.example.drop_messages_android.viewpager.VerticalViewPager
+import com.google.gson.Gson
+import com.google.gson.JsonObject
 import com.tinder.scarlet.WebSocket
 import kotlinx.android.synthetic.main.activity_drop_messages.*
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -25,11 +33,15 @@ import kotlinx.coroutines.withContext
  */
 class DropMessagesActivity : AppCompatActivity() {
 
+    private val locationManager by lazy { LocationManager(applicationContext) }
+    private val gson by lazy { Gson() }
+
     private var socket: DropMessageService? = null
-    private val locationManager by lazy {
-        LocationManager(applicationContext)
-    }
     private var userModel: UserModel? = null
+
+    // page viewer references
+    private var pageView: VerticalViewPager? = null
+    private var pageAdapter: VerticalPageAdapter? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,75 +49,55 @@ class DropMessagesActivity : AppCompatActivity() {
 
         userModel = intent.getParcelableExtra("user")
 
-        initialiseTestUI()
-        //initialiseUI()
+        CoroutineScope(Default).launch {
+            setupSocketHandlers()
+            setupButtonHandlers()
+        }
+
+        //initialiseTestUI()
+        setupPageViewer()
     }
 
-    private fun initialiseTestUI() {
-        val fragments = mutableListOf<Fragment>(
-            TestFragmentSmall(),
-            TestFragmentSmall()
-        )
-        val pageAdapater = VerticalPageAdapter(
-            fragments,
-            supportFragmentManager
-        )
-
-        pager.adapter = pageAdapater
-        pager.offscreenPageLimit = 10
-
-
-        // setup button listeners
-        // test adding a fragment
+    /**
+     * Error handling to recreate the socket manually if we have to do so for whatever reason
+     */
+    private fun setupButtonHandlers() {
         btn_get_top.setOnClickListener {
-            println("adding a fragment")
-            pageAdapater.addFragment(TestFragmentSmall())
+            println("getting top drops")
         }
 
-        // test swapping out the fragments
+        btn_get_latest.setOnClickListener {
+            println("getting latest drops")
+        }
+
         btn_create_drop.setOnClickListener {
-            println("swapping with 10 fragments")
-            pager.adapter = null
-
-            val new_frags = mutableListOf<Fragment>(
-                TestFragmentSmall(),
-                TestFragmentSmall(),
-                TestFragmentSmall(),
-                TestFragmentSmall(),
-                TestFragmentSmall(),
-                TestFragmentSmall(),
-                TestFragmentSmall(),
-                TestFragmentSmall(),
-                TestFragmentSmall(),
-                TestFragmentSmall()
-            )
-
-            pageAdapater.setFragments(new_frags)
-
-            pager.reset()
-            pager.adapter = pageAdapater
+            println("creating a drop")
         }
 
-        // test swapping out the fragments
+        btn_get_random.setOnClickListener {
+            println("getting random drops")
+        }
+
+        btn_map.setOnClickListener {
+            println("go to map")
+        }
+
         btn_my_drops.setOnClickListener {
-            println("swapping with 4 fragments")
-            pager.adapter = null
-
-            val new_frags = mutableListOf<Fragment>(
-                TestFragmentSmall(),
-                TestFragmentSmall(),
-                TestFragmentSmall(),
-                TestFragmentSmall()
-            )
-
-            pageAdapater.setFragments(new_frags)
-
-            pager.reset()
-            pager.adapter = pageAdapater
+            println("get my drops")
         }
     }
 
-    private fun initialiseUI() {
+    private fun loadFragmentsIntoPageViewer(fragments: MutableList<Fragment>) {
+        pager.adapter = null
+
+        fragments.add(StackEmptyFragment())
+        pageAdapter!!.setFragments(fragments)
+
+        pager.reset()
+        pager.adapter = pageAdapter
+    }
+
+    private fun setupPageViewer() {
         val fragments = mutableListOf<Fragment>()
         val verticalPageAdapter = VerticalPageAdapter(
             fragments,
@@ -114,16 +106,6 @@ class DropMessagesActivity : AppCompatActivity() {
 
         pager.adapter = verticalPageAdapter
         pager.offscreenPageLimit = 10
-    }
-
-    override fun onResume() {
-        super.onResume()
-
-        initAnimations()
-
-        CoroutineScope(IO).launch {
-            //setupSocketHandlers()
-        }
     }
 
     /**
@@ -139,168 +121,167 @@ class DropMessagesActivity : AppCompatActivity() {
             println("SOCKET IS NULL ERROR")
             navToMainLoader()
         }
+        else {
+            //Socket closed
+            socket!!.observeWebSocketEvent()
+                .filter { it is WebSocket.Event.OnConnectionClosed }
+                .subscribe {
+                    println(">>[REC] Web socket connection was closed!")
 
-        /**
-         * Web socket message handling
-         *
-         * Socket Open event
-         */
-        socket!!.observeWebSocketEvent()
-            .filter { it is WebSocket.Event.OnConnectionOpened<*> }
-            .subscribe {
-                socket!!.authenticate(AuthenticateSocket(userModel!!.token as String))
-                println("<<[SND]attempt socket auth: ${userModel!!.token}")
-            }
-
-        /**
-         * Socket Close event
-         */
-        socket!!.observeWebSocketEvent()
-            .filter { it is WebSocket.Event.OnConnectionClosed }
-            .subscribe {
-                println(">>[REC] Web socket connection was closed!")
-
-                // Scarlet should handle reconnection for us
-                // if not, logic goes here
-            }
+                    // Scarlet should handle reconnection for us
+                    // if not, logic goes here
+                }
 
 
+            // Socket response routing
+            socket!!.observeSocketResponse()
+                .subscribe {
+                    println(">>[REC]: $it")
 
-        /**
-         * Create Drop Message
-         */
-        //socket.downvote()
+                    val category = it.category
+                    val data = it.data
 
-        /**
-         * Change Geolocation block
-         */
-
-        /**
-         * Get Top messages
-         */
-
-        /**
-         * Get Newest messages
-         */
-
-        /**
-         * Get random messages
-         */
-
-        /**
-         * Get messages within radius
-         */
-
-        /**
-         * Get my messages
-         */
-
-        /**
-         * Upvote
-         */
-
-        /**
-         * Downvote
-         */
-
-        /**
-         * Server response handling
-         */
-        socket!!.observeSocketResponse()
-            .subscribe {
-                println(">>[REC]: $it")
-                val category = it.category
-                val data = it.data
-
-                when {
-                    category == "socket" -> {
-                        handleSocketStatusResponses(data)
-                    }
-                    category == "post" -> {
-                        handlePostResponses(data)
-                    }
-                    category == "retrieve" -> {
-                        handleRetrieveResponses(data)
-                    }
-                    category == "error" -> {
-                        handleErrorResponses(data)
-                    }
-                    category == "notification" -> {
-                        handleNotificationResponses(data)
+                    when (category) {
+                        "socket" -> handleSocketStatusResponses(data)
+                        "post" -> handlePostResponses(data)
+                        "vote" -> handleVoteResponses(data)
+                        "retrieve" -> handleRetrieveResponses(data)
+                        "error" -> handleErrorResponses(data)
+                        "notification" -> handleNotificationResponses(data)
+                        "token" -> handleTokenResponses(data)
                     }
                 }
-            }
+        }
     }
 
     private fun handleSocketStatusResponses(data: String) {
-        println(data)
+        Log.d("DEBUG", data)
     }
 
     private fun handlePostResponses(data: String) {
-        println(data)
+        val response = gson.fromJson(data, PostDataResponse::class.java)
+        println(response)
     }
 
     private fun handleRetrieveResponses(data: String) {
-        println(data)
+        val response = gson.fromJson(data, Array<DropMessage>::class.java)
+        println(response)
+    }
+
+    private fun handleVoteResponses(data: String) {
+        val response = gson.fromJson(data, PostDataResponse::class.java)
+        println(response)
     }
 
     private fun handleErrorResponses(data: String) {
-        println(data)
+        Log.e("ERROR", data)
     }
 
     private fun handleNotificationResponses(data: String) {
         println(data)
     }
 
-    /**
-     * If we need to get a new token
-
-    private suspend fun getToken(model: SignInModel) {
-        setLoadingTextAsync("Fetching Authentication Token")
-
-        withContext(IO) {
-            val url = resources.getString(R.string.get_token_url)
-            val gson = Gson()
-            val json = gson.toJson(GetTokenModel(model.username as String, model.password as String))
-
-            Postie().sendPostRequest(applicationContext, url, json,
-                {
-                    val response = gson.fromJson(it.toString(), JsonObject::class.java)
-                    if (response.has("token")) {
-                        setLoadingText("Token received!")
-                        println("JWT response: ${response["token"]}")
-
-                        CoroutineScope(Main).launch {
-                            val token = response["token"]
-                                .toString()
-                                .removePrefix("\"")
-                                .removeSuffix("\"")
-
-                            val sp = getSharedPreferences("Login", Context.MODE_PRIVATE)
-                            sp.edit().putString("token", token).commit()
-                            println(sp.getString("token", null))
-
-                            // connect the web socket
-                            setupConnection(token)
-                        }
-                    }
-                    else {
-                        CoroutineScope(Default).launch {
-                            setLoadingTextAsync("Failed to get Token")
-                            delay(2000)
-                            navToUserFront()
-                        }
-                    }
-                },
-                {
-                    Log.e("POST", it.toString())
-                    Toast.makeText(applicationContext, it.toString(), Toast.LENGTH_SHORT).show()
-                }
-            )
+    private fun handleTokenResponses(data: String) {
+        Log.d("DEBUG", data)
+        // token message means we need to recreate a connection with a new token
+        CoroutineScope(IO).launch {
+            fetchJsonWebToken()
         }
     }
-     */
 
+    private suspend fun fetchJsonWebToken() {
+        val url = resources.getString(R.string.get_token_url)
+        val gson = Gson()
+        if (userModel == null) {
+            Log.e("ERROR", "Must be logged in to refresh token")
+            navToMainLoader()
+        }
+        val json = gson.toJson(GetTokenModel(userModel!!.username as String, userModel!!.password as String))
+
+        Postie().sendPostRequest(applicationContext, url, json,
+            {
+                val response = gson.fromJson(it.toString(), JsonObject::class.java)
+                if (response.has("token")) {
+                    println("JWT response: ${response["token"]}")
+
+                    //strip any " chars pended on by the api server
+                    val token = response["token"]
+                        .toString()
+                        .removePrefix("\"")
+                        .removeSuffix("\"")
+
+                    userModel!!.token = token
+
+                    // save new token to shared preferences file
+                    CoroutineScope(IO).launch {
+                        val sp = getSharedPreferences("Login", MODE_PRIVATE)
+                        sp.edit().putString("token", token).commit()
+                        val locationManager = LocationManager(applicationContext)
+                        locationManager.updateLocation(::onLocationReceived, ::onLocationError)
+                    }
+                }
+                else {
+                    CoroutineScope(Default).launch {
+                        Log.e("ERROR", "Server failed to provide a token")
+                        Toast.makeText(applicationContext, "Server connection lost!", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            },
+            {
+                Log.e("POST", it.toString())
+
+            }
+        )
+    }
+
+    // event listener for location manager
+    private fun onLocationReceived(location: Geolocation) {
+        userModel!!.location = location
+        CoroutineScope(IO).launch {
+            setupConnection(location)
+        }
+    }
+    private fun onLocationError(ex: Exception) {
+        Log.e("ERROR", ex.toString())
+        Toast.makeText(applicationContext, "Google play services error!", Toast.LENGTH_SHORT).show()
+        finish()
+    }
+
+    private suspend fun setupConnection(location: Geolocation) {
+        if (userModel!!.token == null)
+            navToMainLoader()
+        else {
+            val socket = SocketManager.init(application).createSocket()
+
+            // send authentication token as soon as web socket is opened
+            socket.observeWebSocketEvent()
+                .filter { it is WebSocket.Event.OnConnectionOpened<*> }
+                .subscribe {
+                    socket.authenticate(
+                        AuthenticateSocket(
+                            userModel!!.token as String,
+                            location.lat.toFloat(),
+                            location.long.toFloat()
+                        )
+                    )
+                    println("<<[SND]Authenticate: ${userModel!!.token} @${location}")
+                }
+
+            // observe response from the token authentication
+            socket.observeSocketResponse()
+                .subscribe {
+                    println(">>[REC]: $it")
+                    if (it.category == "socket" && it.data == "open") {
+                        println(">>[REC]Authenticated")
+                    }
+                    // failed token authentication for whatever reason
+                    else {
+                        Log.e("ERROR", "SOCKET AUTH FAILED")
+                        Toast.makeText(applicationContext, "Could not connect to server!", Toast.LENGTH_SHORT).show()
+                    }
+                }
+        }
+    }
 
     /**
      * Handle permission requests
@@ -360,31 +341,99 @@ class DropMessagesActivity : AppCompatActivity() {
     }
 
     /**
-     * View Animations
+     * TESTING
      */
-    private fun initAnimations() {
-        /*
-        // dots animation on loading text
-        val slideX = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, 0f, 120f)
+    private fun initialiseTestUI() {
 
-        ObjectAnimator.ofPropertyValuesHolder(img_white_cover, slideX).apply {
-            interpolator = LinearInterpolator()
-            duration = 2500
-            repeatMode = ObjectAnimator.RESTART
-            repeatCount = ObjectAnimator.INFINITE
-        }.start()
+        val fragments = mutableListOf<Fragment>(
+            TestFragmentSmall(),
+            TestFragmentSmall(),
+            StackEmptyFragment()
+        )
+        pageAdapter = VerticalPageAdapter(
+            fragments,
+            supportFragmentManager
+        )
 
-        // logo pulse
-        val scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 0.8f, 1f)
-        val scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 0.8f, 1f)
-        val alpha = PropertyValuesHolder.ofFloat(View.ALPHA, 0.8f, 1f)
-        ObjectAnimator.ofPropertyValuesHolder(img_logo, scaleX, scaleY, alpha).apply {
-            interpolator = OvershootInterpolator()
-            duration = 1000
-            repeatMode = ObjectAnimator.REVERSE
-            repeatCount = ObjectAnimator.INFINITE
-        }.start()
+        pager.adapter = pageAdapter
+        pager.offscreenPageLimit = 10
 
-         */
+        // check if we are on the last page. scroll up on last page will attempt to retrieve more messages from the server
+        pager.addOnPageChangeListener(object: ViewPager.OnPageChangeListener {
+            private var scrolling: Boolean = false
+            private var lastPageScrolled: Boolean = false
+
+            override fun onPageScrollStateChanged(state: Int) {
+                scrolling = state == 1
+            }
+
+            override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
+                if (scrolling && position == pageAdapter!!.count - 1 && !lastPageScrolled) {
+                    lastPageScrolled = true
+                    println("last page scrolled")
+
+                    // get more pages here
+                }
+            }
+
+            override fun onPageSelected(position: Int) {
+                if (position == pageAdapter!!.count - 1) {
+                    println("on last page")
+                } else {
+                    lastPageScrolled = false
+                }
+            }
+        })
+
+
+        // setup button listeners
+        // test adding a fragment
+        btn_get_top.setOnClickListener {
+            println("adding a fragment")
+            pageAdapter!!.addFragment(TestFragmentSmall())
+        }
+
+        // test swapping out the fragments
+        btn_create_drop.setOnClickListener {
+            println("swapping with 10 fragments")
+            pager.adapter = null
+
+            val new_frags = mutableListOf<Fragment>(
+                TestFragmentSmall(),
+                TestFragmentSmall(),
+                TestFragmentSmall(),
+                TestFragmentSmall(),
+                TestFragmentSmall(),
+                TestFragmentSmall(),
+                TestFragmentSmall(),
+                TestFragmentSmall(),
+                TestFragmentSmall(),
+                StackEmptyFragment()
+            )
+
+            pageAdapter!!.setFragments(new_frags)
+
+            pager.reset()
+            pager.adapter = pageAdapter
+        }
+
+        // test swapping out the fragments
+        btn_my_drops.setOnClickListener {
+            println("swapping with 4 fragments")
+            pager.adapter = null
+
+            val new_frags = mutableListOf<Fragment>(
+                TestFragmentSmall(),
+                TestFragmentSmall(),
+                TestFragmentSmall(),
+                TestFragmentSmall(),
+                StackEmptyFragment()
+            )
+
+            pageAdapter!!.setFragments(new_frags)
+
+            pager.reset()
+            pager.adapter = pageAdapter
+        }
     }
 }

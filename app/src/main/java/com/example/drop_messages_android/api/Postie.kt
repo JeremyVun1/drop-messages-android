@@ -1,9 +1,7 @@
 package com.example.drop_messages_android.api
 
 import android.content.Context
-import com.android.volley.Request
-import com.android.volley.Response
-import com.android.volley.VolleyError
+import com.android.volley.*
 import com.android.volley.toolbox.JsonObjectRequest
 import org.json.JSONObject
 
@@ -28,6 +26,12 @@ class Postie {
                 return json.toByteArray()
             }
         }
+
+        request.retryPolicy = DefaultRetryPolicy(
+            10000,
+            DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+            DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+        )
 
         // add it to our volley request queue
         NetworkSingleton.getInstance(context).addToRequestQueue(request)

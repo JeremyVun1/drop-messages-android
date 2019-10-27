@@ -22,10 +22,17 @@ class LocationManager(val context: Context) {
         else return Geolocation(currLoc!!.latitude, currLoc!!.longitude)
     }
 
-    fun updateLocation(listener: (loc: Geolocation) -> Unit) {
+    fun updateLocation(listener: (loc: Geolocation) -> Unit, errorListener: (ex: Exception) -> Unit) {
+        println("UPDATING LOCATION")
         flpClient!!.lastLocation.addOnSuccessListener {
+            println("WE GOT THE LOCATION!")
             currLoc = it
             listener(getLastKnownLocation())
+        }.addOnFailureListener {
+            println("LOCATION FAILURE")
+            errorListener(it)
+        }.addOnCanceledListener {
+            errorListener(Exception("cancelled"))
         }
     }
 
