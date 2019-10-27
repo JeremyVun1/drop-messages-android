@@ -50,6 +50,12 @@ class MainLoaderActivity : AppCompatActivity() {
 
         initAnimations()
 
+        setLoadingText("Checking Google Play Availability")
+        if (!Util.hasGooglePlayServices(applicationContext)) {
+            setLoadingText("Google play services not found!")
+            finish()
+        }
+
         CoroutineScope(Default).launch {
             handlePermissionRequests()
 
@@ -63,13 +69,11 @@ class MainLoaderActivity : AppCompatActivity() {
 
     /**
      * Need to handle 3 states
-     * 1) User details are not stored
+     * 1) User has no internet
+     * 2) User details are not stored
      *      - route to UserFrontActivity
-     * 2) User details are stored but they don't have a JWT token
+     * 3) User details are stored
      *      - make token request
-     *      - attempt to create web socket connection
-     *      - route to MainActivity
-     * 3) User details are stored, and they have a JWT token to make web socket connection
      *      - attempt to create web socket connection
      *      - route to MainActivity
      */
@@ -80,25 +84,17 @@ class MainLoaderActivity : AppCompatActivity() {
 
             when {
                 // no internet connection error
-                !Util.hasInternet(applicationContext) -> {
-                    navToNoInternet()
-                }
+                !Util.hasInternet(applicationContext) -> navToNoInternet()
+
                 // no user details, route to user front activity
                 userModel == null -> {
                     setLoadingTextAsync("Welcome first time user!")
                     delay(1200)
                     navToUserFront()
                 }
-                // get a jwt from server
-                userModel!!.token == null -> {
-                    fetchJsonWebToken()
-                }
-                // we have a user and a token
-                else -> {
-                    setLoadingTextAsync("Fetching current location")
-                    val locationManager = LocationManager(applicationContext)
-                    locationManager.updateLocation(::onLocationReceived, ::onLocationError)
-                }
+
+                // get JWT from server and use it to authenticate a web socket connection
+                else -> fetchJsonWebToken()
             }
         }
     }
@@ -145,6 +141,13 @@ class MainLoaderActivity : AppCompatActivity() {
             {
                 Log.e("POST", it.toString())
                 Toast.makeText(applicationContext, it.toString(), Toast.LENGTH_SHORT).show()
+
+                CoroutineScope(Default).launch {
+                    setLoadingTextAsync("Server connection failed")
+
+                    delay(2000)
+                    navToUserFront()
+                }
             }
         )
     }
@@ -168,13 +171,13 @@ class MainLoaderActivity : AppCompatActivity() {
     }
 
     private suspend fun setupConnection(location: Geolocation) {
-        println("SETTING UP CONNECTION")
+        withContext(Main) {
+            println("setup connection in: ${Thread.currentThread()}")
             if (userModel!!.token == null) {
                 setLoadingTextAsync("Token not found")
                 delay(1000)
                 navToUserFront()
-            }
-            else {
+            } else {
                 setLoadingTextAsync("Connecting to server")
                 println("CONNECTING THE WEB SOCKET")
 
@@ -183,9 +186,6 @@ class MainLoaderActivity : AppCompatActivity() {
                     .init(application)
                     .createSocket()
 
-                println("socket obj: {socket}")
-
-                println("SETTING UP BASE SOCKET HANDLERS")
                 // send authentication token as soon as web socket is opened
                 socket.observeWebSocketEvent()
                     .filter { it is WebSocket.Event.OnConnectionOpened<*> }
@@ -201,7 +201,7 @@ class MainLoaderActivity : AppCompatActivity() {
                     }
 
                 // observe response from the token authentication
-                socket.observeSocketResponse()
+                socket.observeAuthResponse()
                     .subscribe {
                         println(">>[REC]: $it")
                         if (it.category == "socket" && it.data == "open") {
@@ -213,21 +213,17 @@ class MainLoaderActivity : AppCompatActivity() {
                                 delay(1000)
                                 navToDropMessagesActivity()
                             }
-                        }
-                        // failed token authentication for whatever reason
-                        else {
+                        } else if (it.category == "socket" && it.data == "closed") {
                             CoroutineScope(Default).launch {
                                 setLoadingTextAsync("Authentication failed")
-
-                                socket.close(CloseSocket(9))
+                                SocketManager.closeSocket()
                                 delay(1000)
                                 navToUserFront()
                             }
                         }
                     }
-
-                println("SOCKET HANDLERS SET UP")
             }
+        }
     }
 
     /**

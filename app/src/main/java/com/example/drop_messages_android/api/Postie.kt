@@ -28,8 +28,7 @@ class Postie {
         }
 
         request.retryPolicy = DefaultRetryPolicy(
-            10000,
-            DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+            10000, 3,
             DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
         )
 

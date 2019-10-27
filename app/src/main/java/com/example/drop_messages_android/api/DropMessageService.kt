@@ -45,5 +45,8 @@ interface DropMessageService {
     fun observeWebSocketEvent(): Flowable<WebSocket.Event>
 
     @Receive
+    fun observeAuthResponse(): Flowable<SocketResponse>
+
+    @Receive
     fun observeSocketResponse(): Flowable<SocketResponse>
 }

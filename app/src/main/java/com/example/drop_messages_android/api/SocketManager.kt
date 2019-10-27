@@ -22,15 +22,16 @@ import com.tinder.scarlet.lifecycle.LifecycleRegistry
 object SocketManager {
     private lateinit var socket: DropMessageService
     private lateinit var application: Application
-    //private lateinit var lifecycleSwitch: LifecycleRegistry
+    private lateinit var lifecycleSwitch: LifecycleRegistry
+    private var open: Boolean = false
 
     fun init(app: Application) : SocketManager {
         if (::socket.isInitialized) {
-            socket.close(CloseSocket(9))
+            openSocket()
             return this
         }
         else {
-            //lifecycleSwitch = LifecycleRegistry(0L)
+            lifecycleSwitch = LifecycleRegistry(0L)
             application = app
             socket = createSocket()
         }
@@ -43,12 +44,18 @@ object SocketManager {
         return null
     }
 
-    private fun closeSocket() {
-        //lifecycleSwitch.onNext(Lifecycle.State.Stopped.WithReason(ShutdownReason.GRACEFUL))
+    fun closeSocket() {
+        if (open) {
+            lifecycleSwitch.onNext(Lifecycle.State.Stopped.WithReason(ShutdownReason.GRACEFUL))
+            open = false
+        }
     }
 
-    private fun openSocket() {
-        //lifecycleSwitch.onNext(Lifecycle.State.Started)
+    fun openSocket() {
+        if (!open) {
+            lifecycleSwitch.onNext(Lifecycle.State.Started)
+            open = true
+        }
     }
 
 
@@ -61,8 +68,8 @@ object SocketManager {
             .writeTimeout(10, TimeUnit.SECONDS)
             .build()
 
-        val lifecycle = AndroidLifecycle.ofApplicationForeground(application)
-            //.combineWith(lifecycleSwitch)
+        val lifecycle = //AndroidLifecycle.ofApplicationForeground(application)
+            lifecycleSwitch
 
         val backoffStrategy = ExponentialWithJitterBackoffStrategy(5000, 5000)
 
@@ -76,6 +83,7 @@ object SocketManager {
         socket = scarlet.create()
 
         println("websocket created to $socketUrl")
+        openSocket()
 
         return socket
     }

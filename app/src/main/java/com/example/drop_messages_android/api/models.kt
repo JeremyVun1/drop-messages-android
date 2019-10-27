@@ -29,7 +29,9 @@ data class Geolocation(var lat: Double, var long: Double) : Parcelable {
     }
 }
 
-data class DropMessage(val id: Int, val lat: Float, val long: Float, val date: String, val votes: Int, val seen: Int)
+@Parcelize
+data class DropMessage(val id: Int, val lat: Float, val long: Float, val message: String, val date: String, val votes: Int, val seen: Int, val author: String) : Parcelable
+
 data class PostDataResponse(val id: Int, val success: Boolean, val meta: String)
 
 // web socket

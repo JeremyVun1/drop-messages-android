@@ -16,6 +16,8 @@
         android:id="@+id/progressBar"
         android:layout_width="150dp"
         android:layout_height="150dp"
+        android:layout_marginTop="240dp"
+        android:layout_marginBottom="290dp"
         android:layout_gravity="center"
         android:indeterminateDrawable="@drawable/custom_circle_progressbar" />
 
@@ -24,7 +26,7 @@
         android:layout_width="wrap_content"
         android:layout_height="80dp"
         android:layout_gravity="center"
-        android:layout_marginTop="289dp"
+        android:layout_marginTop="240dp"
         android:layout_marginBottom="290dp"
         android:paddingBottom="15dp"
         app:srcCompat="@drawable/ic_drop_message" />
@@ -38,7 +40,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginTop="150dp"
+            android:layout_marginTop="70dp"
             android:layout_marginLeft="20dp"
             android:gravity="center"
             android:orientation="horizontal"

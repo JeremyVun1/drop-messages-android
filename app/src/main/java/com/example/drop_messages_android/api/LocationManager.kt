@@ -4,8 +4,10 @@ import android.Manifest.permission
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
+import android.widget.Toast
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.google.android.material.snackbar.Snackbar
 
 
 class LocationManager(val context: Context) {
@@ -17,8 +19,12 @@ class LocationManager(val context: Context) {
     }
 
     fun getLastKnownLocation() : Geolocation {
-        if (!hasLocationPermissions() || currLoc == null)
-            return Geolocation(1.0,1.0)
+        if (!hasLocationPermissions() || currLoc == null) {
+            // Alert the user that they need to enable location permissions
+            // or else it will default them to Geolocation(1,1)
+            Toast.makeText(context, "Defaulting to lat,long (1,1). Enable location permissions to use your current location", Toast.LENGTH_LONG).show()
+            return Geolocation(1.0, 1.0)
+        }
         else return Geolocation(currLoc!!.latitude, currLoc!!.longitude)
     }
 
