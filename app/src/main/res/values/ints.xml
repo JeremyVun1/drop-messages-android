@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="MAX_MESSAGE_LENGTH">240</integer>
+    <integer name="STATUS_PAUSE_MS_SHORT">500</integer>
+    <integer name="STATUS_PAUSE_MS_LONG">1000</integer>
+</resources>

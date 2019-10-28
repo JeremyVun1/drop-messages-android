@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:elevation="0dp"
+    android:stateListAnimator="@null">
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:srcCompat="@drawable/ic_drop_card_create"
+        android:background="@drawable/shadow_small"
+        android:elevation="0dp"
+        android:padding="0dp"
+        android:layout_margin="0dp"
+        android:stateListAnimator="@null"/>
+
+    <LinearLayout
+        android:id="@+id/content_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+        android:elevation="1dp"
+        android:paddingLeft="30dp"
+        android:paddingRight="30dp"
+        android:paddingTop="40dp"
+            android:orientation="vertical">
+
+        <TextView
+                android:id="@+id/tv_author"
+                style="@style/CardAuthorText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
+                android:text="@string/placeholder" />
+
+            <ImageView
+                android:id="@+id/header_line"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:alpha="0.8"
+                android:layout_marginBottom="10dp"
+                app:srcCompat="@drawable/grey_line_horizontal" />
+
+        <EditText
+            android:id="@+id/et_message"
+            style="@style/CardMessageBodyText"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:background="@android:color/transparent"
+            android:ems="10"
+            android:gravity="top|start"
+            android:hint="@string/card_message_hint"
+            android:inputType="textAutoCorrect|none|textMultiLine"
+            android:maxLength="@integer/MAX_MESSAGE_LENGTH"
+            android:scrollHorizontally="false" />
+
+        <TextView
+            android:id="@+id/tv_char_count"
+            style="@style/CardMessageSubText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="@string/placeholder" />
+
+    </LinearLayout>
+
+</FrameLayout>

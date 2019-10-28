@@ -32,7 +32,7 @@ data class Geolocation(var lat: Double, var long: Double) : Parcelable {
 @Parcelize
 data class DropMessage(val id: Int, val lat: Float, val long: Float, val message: String, val date: String, val votes: Int, val seen: Int, val author: String) : Parcelable
 
-data class PostDataResponse(val id: Int, val success: Boolean, val meta: String)
+data class PostDataResponse(val echo: DropMessage, val result: Boolean, val meta: String)
 
 // web socket
 // send models
@@ -44,6 +44,7 @@ data class RequestDropsRange(val category: Int, val data: String, val page: Int)
 data class Upvote(val category: Int, val data: String)
 data class Downvote(val category: Int, val data: String)
 data class CloseSocket(val category: Int)
+data class Delete(val category: Int, val data: String)
 
 // response models
 data class SocketResponse(val category: String, val data: String)

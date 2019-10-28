@@ -45,10 +45,8 @@ object SocketManager {
     }
 
     fun closeSocket() {
-        if (open) {
-            lifecycleSwitch.onNext(Lifecycle.State.Stopped.WithReason(ShutdownReason.GRACEFUL))
-            open = false
-        }
+        lifecycleSwitch.onNext(Lifecycle.State.Stopped.WithReason(ShutdownReason.GRACEFUL))
+        open = false
     }
 
     fun openSocket() {
@@ -59,7 +57,12 @@ object SocketManager {
     }
 
 
-    fun createSocket(): DropMessageService {
+    private fun createSocket(): DropMessageService {
+        try {
+            if (::socket.isInitialized)
+                closeSocket()
+        } catch(ex: Exception) {}
+
         val socketUrl = "${application.resources.getString(R.string.web_socket_url)}"
 
         val client = OkHttpClient.Builder()

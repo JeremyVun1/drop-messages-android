@@ -12,11 +12,13 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.viewpager.widget.ViewPager
 import com.example.drop_messages_android.api.*
+import com.example.drop_messages_android.fragments.CreateDropDialogFragment
 import com.example.drop_messages_android.fragments.DropMessageFragment
 import com.example.drop_messages_android.fragments.StackEmptyFragment
-import com.example.drop_messages_android.fragments.TestFragmentSmall
 import com.example.drop_messages_android.viewpager.VerticalPageAdapter
 import com.example.drop_messages_android.viewpager.VerticalViewPager
+import com.example.drop_messages_android.fragments.CreateDropDialogFragment.CreateDropListener
+import com.example.drop_messages_android.fragments.DropMessageFragment.DropMessageFragmentListener
 import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
 import com.google.gson.JsonObject
@@ -26,7 +28,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -34,7 +35,7 @@ import kotlinx.coroutines.withContext
 /**
  * Main activity where user can make api requests through a web socket to create and retrieve data
  */
-class DropMessagesActivity : AppCompatActivity() {
+class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessageFragmentListener {
 
     private val locationManager by lazy { LocationManager(applicationContext) }
     private val gson by lazy { Gson() }
@@ -45,11 +46,11 @@ class DropMessagesActivity : AppCompatActivity() {
     private var lastRequest: DropRequest? = null
     private var pageNumber: Int = 1
     private var requesting: Boolean = false
+    private var lastPageScrolled: Boolean = false
 
     // page viewer references
-    private var pageView: VerticalViewPager? = null
     private var pageAdapter: VerticalPageAdapter? = null
-    private var fragments: ArrayList<Fragment>? = null
+    private var fragments: MutableList<Fragment>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,10 +59,7 @@ class DropMessagesActivity : AppCompatActivity() {
         userModel = intent.getParcelableExtra("user")
         pager.offscreenPageLimit = 10
 
-        println("oncreate in: ${Thread.currentThread()}")
-
-        CoroutineScope(Main).launch {
-            println("oncreate coroutine in: ${Thread.currentThread()}")
+        CoroutineScope(Default).launch {
             setupSocketHandlers()
         }
         setupButtonHandlers()
@@ -81,7 +79,12 @@ class DropMessagesActivity : AppCompatActivity() {
         btn_my_drops.setOnClickListener { requestDrops(DropRequest.GET_MINE) }
 
         btn_create_drop.setOnClickListener {
-            println("creating a drop")
+            val dialog = CreateDropDialogFragment()
+            val b = Bundle()
+            b.putString("author", userModel!!.username)
+            dialog.arguments = b
+
+            dialog.show(supportFragmentManager, "Create Drop Message")
         }
 
         btn_map.setOnClickListener {
@@ -93,7 +96,6 @@ class DropMessagesActivity : AppCompatActivity() {
         if (!Util.hasInternet(applicationContext))
             navToNoInternet()
 
-        println("Requesting ${requestType.value}")
         if (lastRequest != requestType && !requesting) {
             pageNumber = 1
             requesting = true
@@ -110,7 +112,6 @@ class DropMessagesActivity : AppCompatActivity() {
     private fun setupPageLoading() {
         pager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
             private var scrolling: Boolean = false
-            private var lastPageScrolled: Boolean = false
 
             override fun onPageScrollStateChanged(state: Int) {
                 scrolling = state == 1
@@ -126,17 +127,15 @@ class DropMessagesActivity : AppCompatActivity() {
                     lastPageScrolled = true
 
                     // get more pages
-                    pageNumber += 1
+                    if (lastRequest == null)
+                        lastRequest = DropRequest.GET_MINE
                     socket!!.requestDrops(RequestDrops(lastRequest!!.value, pageNumber))
                 }
             }
 
             override fun onPageSelected(position: Int) {
-                if (position == pageAdapter!!.count - 1) {
-                    println("on last page")
-                } else {
+                if (position != pageAdapter!!.count - 1)
                     lastPageScrolled = false
-                }
             }
         })
     }
@@ -151,20 +150,14 @@ class DropMessagesActivity : AppCompatActivity() {
         socket = SocketManager.getWebSocket()
         if (socket == null) {
             Log.e("ERROR", "Cannot use a null socket")
-            println("SOCKET IS NULL ERROR")
             navToMainLoader()
-        } else {
-            println("SOCKET IS NOT NULL!")
-
+        }
+        else {
             // Socket response routing
             socket!!.observeSocketResponse()
                 .subscribe {
                     val category = it.category
                     val data = it.data
-                    println(category)
-                    println(data)
-                    println(DropResponse.getEnum(category))
-                    println("handling rec from: ${Thread.currentThread()}")
 
                     when (DropResponse.getEnum(category)) {
                         DropResponse.SOCKET -> handleSocketStatusResponses(data)
@@ -177,47 +170,82 @@ class DropMessagesActivity : AppCompatActivity() {
                         DropResponse.UNKNOWN -> Log.e("ERROR", "Unknown server response category")
                     }
                 }
-            println("SOCKETS SUBSCRIBED!")
         }
     }
 
     private fun handlePostResponses(data: String) {
         val response = gson.fromJson(data, PostDataResponse::class.java)
+        println("HANDLING POST RESPONSE:")
         println(response)
 
-        if (response.success)
-            showSnackBar("Message dropped at ${userModel!!.location}!")
-        else
-            showSnackBar("Could not drop message: ${response.meta}!")
+        if (response.result) {
+            try {
+                println("RESPONSE SUCCESS")
+                println(response.meta)
+                val fragment = createDropMessageFragment(response.echo)
+
+                val geolocStr = "(${response.echo.lat.format(2)}, ${response.echo.long.format(2)})"
+                addFragmentToPageViewer(fragment, "Message dropped at $geolocStr")
+            } catch (ex: Exception) {
+                Log.e("ERROR", Log.getStackTraceString(ex))
+            }
+        }
+        else showSnackBar("Drop failed: ${response.meta}!")
     }
 
     private fun handleRetrieveResponses(data: String) {
         CoroutineScope(Main).launch {
-            println("handling retrieve from: ${Thread.currentThread()}")
             val response = gson.fromJson(data, Array<DropMessage>::class.java)
-            println(response)
 
-            val list = arrayListOf<Fragment>()
-            for (message in response)
-                list.add(createDropMessageFragment(message))
+            if (response.isNotEmpty()) {
+                val list = arrayListOf<Fragment>()
+                for (message in response)
+                    list.add(createDropMessageFragment(message))
 
-            fragments = list
-            loadFragmentsIntoPageViewer(list)
+                fragments = list
+                loadFragmentsIntoPageViewer(list)
+
+                pageNumber += 1
+            }
+            else {
+                pageNumber = 1
+                lastRequest = null
+                lastPageScrolled = false
+                showSnackBar("No more drop messages found!")
+            }
 
             requesting = false
-            pageNumber += 1
         }
     }
 
     private fun handleNotificationResponses(data: String) {
         val response = gson.fromJson(data, DropMessage::class.java)
-        println(response)
 
-        // add the new message to the stack
         val fragment = createDropMessageFragment(response)
 
-        pageAdapter!!.addFragment(fragment)
-        showSnackBarWithJump("You picked up a new message!", fragments!!.size)
+        addFragmentToPageViewer(fragment, "You picked up a new message!")
+    }
+
+    private fun addFragmentToPageViewer(fragment: Fragment, text: String) {
+        CoroutineScope(Main).launch {
+            if (fragments == null) {
+                val fragmentList = mutableListOf(fragment)
+                fragments = fragmentList
+                loadFragmentsIntoPageViewer(fragmentList)
+            }
+            else {
+                pageAdapter!!.addFragment(fragment)
+                println("SIZE: ${fragments!!.size}")
+                showSnackBarWithJump(text, fragments!!.size-1)
+            }
+        }
+    }
+
+    private fun removeFragmentFromPageViewer(msgId: Int) {
+        CoroutineScope(Main).launch {
+            pageAdapter!!.removeFragment(msgId)
+            showSnackBar("Drop Message deleted!")
+        }
     }
 
     private fun handleSocketStatusResponses(data: String) {
@@ -247,6 +275,7 @@ class DropMessagesActivity : AppCompatActivity() {
     private fun createDropMessageFragment(model: DropMessage): Fragment {
         val b = Bundle()
         b.putParcelable("model", model)
+        b.putBoolean("canDelete", model.author == userModel!!.username)
 
         val result = DropMessageFragment()
         result.arguments = b
@@ -255,7 +284,6 @@ class DropMessagesActivity : AppCompatActivity() {
     }
 
     private fun loadFragmentsIntoPageViewer(fragmentList: MutableList<Fragment>) {
-        println("loading fragment in: ${Thread.currentThread()}")
         pager.adapter = null
 
         fragmentList.add(StackEmptyFragment())
@@ -278,6 +306,36 @@ class DropMessagesActivity : AppCompatActivity() {
 
         pager.adapter = verticalPageAdapter
         pager.offscreenPageLimit = 10
+    }
+
+    /**
+     * Fragment callbacks
+     */
+    // listener for create drop message dialog fragment
+    override fun onCreateDrop(msg: String) {
+        println("creating msg: $msg")
+        socket!!.createDrop(CreateDrop(DropRequest.CREATE_DROP.value, msg))
+    }
+
+    override fun onUpvote(id: Int?) {
+        if (id != null) {
+            println("upvoting msg: $id")
+            socket!!.upvote(Upvote(DropRequest.UPVOTE.value, id.toString()))
+        }
+    }
+
+    override fun onDownvote(id: Int?) {
+        if (id != null) {
+            println("downvoting msg: $id")
+            socket!!.downvote(Downvote(DropRequest.DOWNVOTE.value, id.toString()))
+        }
+    }
+
+    override fun onDelete(id: Int?) {
+        if (id != null) {
+            socket!!.delete(Delete(DropRequest.DELETE.value, id.toString()))
+            removeFragmentFromPageViewer(id)
+        }
     }
 
     /**
@@ -343,7 +401,7 @@ class DropMessagesActivity : AppCompatActivity() {
     private fun onLocationReceived(location: Geolocation) {
         userModel!!.location = location
         CoroutineScope(IO).launch {
-            println("DROP MESSAGES SET UP THE SOCKET AGAIN")
+            println("SET UP THE SOCKET AGAIN")
             setupConnection(location)
         }
     }
@@ -358,10 +416,11 @@ class DropMessagesActivity : AppCompatActivity() {
         if (userModel!!.token == null)
             navToMainLoader()
         else {
-            val socket = SocketManager.init(application).createSocket()
+            println("DROP MESSAGE ACTIVITY CREATING SOCKET")
+            val socket = SocketManager.init(application).getWebSocket()
 
             // send authentication token as soon as web socket is opened
-            socket.observeWebSocketEvent()
+            socket!!.observeWebSocketEvent()
                 .filter { it is WebSocket.Event.OnConnectionOpened<*> }
                 .subscribe {
                     socket.authenticate(
@@ -388,9 +447,7 @@ class DropMessagesActivity : AppCompatActivity() {
         permissions: Array<out String>,
         grantResults: IntArray
     ) {
-        println("permissions granted!")
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        // waitingForPermissions = false
     }
 
     /**
@@ -411,7 +468,7 @@ class DropMessagesActivity : AppCompatActivity() {
      * show snackbar with message
      */
     private fun showSnackBar(text: String) {
-        val snack = Snackbar.make(root_container, text, Snackbar.LENGTH_SHORT)
+        val snack = Snackbar.make(root_container, text, Snackbar.LENGTH_LONG)
         snack.setAction("OK") { }
 
         val actionColor = ContextCompat.getColor(applicationContext, R.color.colorAccent)
@@ -421,9 +478,10 @@ class DropMessagesActivity : AppCompatActivity() {
     }
 
     private fun showSnackBarWithJump(text: String, position: Int) {
-        val snack = Snackbar.make(root_container, text, Snackbar.LENGTH_SHORT)
+        println("jumping to $position")
+        val snack = Snackbar.make(root_container, text, Snackbar.LENGTH_LONG)
         snack.setAction("View it!") {
-            pageView!!.setCurrentItem(position)
+            pager.currentItem = position
         }
 
         val actionColor = ContextCompat.getColor(applicationContext, R.color.colorAccent)

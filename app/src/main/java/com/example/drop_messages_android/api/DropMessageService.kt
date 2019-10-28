@@ -38,6 +38,9 @@ interface DropMessageService {
     @Send
     fun close(model: CloseSocket)
 
+    @Send
+    fun delete(model: Delete)
+
     /**
      * Response message models
      */

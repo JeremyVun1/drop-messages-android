@@ -89,7 +89,7 @@ class MainLoaderActivity : AppCompatActivity() {
                 // no user details, route to user front activity
                 userModel == null -> {
                     setLoadingTextAsync("Welcome first time user!")
-                    delay(1200)
+                    delay(resources.getInteger(R.integer.STATUS_PAUSE_MS_LONG).toLong())
                     navToUserFront()
                 }
 
@@ -133,7 +133,7 @@ class MainLoaderActivity : AppCompatActivity() {
                 else {
                     CoroutineScope(Default).launch {
                         setLoadingTextAsync("Failed to get Token")
-                        delay(2000)
+                        delay(resources.getInteger(R.integer.STATUS_PAUSE_MS_LONG).toLong())
                         navToUserFront()
                     }
                 }
@@ -145,7 +145,7 @@ class MainLoaderActivity : AppCompatActivity() {
                 CoroutineScope(Default).launch {
                     setLoadingTextAsync("Server connection failed")
 
-                    delay(2000)
+                    delay(resources.getInteger(R.integer.STATUS_PAUSE_MS_LONG).toLong())
                     navToUserFront()
                 }
             }
@@ -165,29 +165,26 @@ class MainLoaderActivity : AppCompatActivity() {
         CoroutineScope(IO).launch {
             Log.e("ERROR", ex.message)
             setLoadingTextAsync(ex.message as String)
-            delay(2000)
+            delay(resources.getInteger(R.integer.STATUS_PAUSE_MS_LONG).toLong())
             finish()
         }
     }
 
     private suspend fun setupConnection(location: Geolocation) {
         withContext(Main) {
-            println("setup connection in: ${Thread.currentThread()}")
             if (userModel!!.token == null) {
                 setLoadingTextAsync("Token not found")
-                delay(1000)
+                delay(resources.getInteger(R.integer.STATUS_PAUSE_MS_SHORT).toLong())
                 navToUserFront()
             } else {
                 setLoadingTextAsync("Connecting to server")
-                println("CONNECTING THE WEB SOCKET")
 
                 // initialise our socket singleton
                 val socket = SocketManager
-                    .init(application)
-                    .createSocket()
+                    .init(application).getWebSocket()
 
                 // send authentication token as soon as web socket is opened
-                socket.observeWebSocketEvent()
+                socket!!.observeWebSocketEvent()
                     .filter { it is WebSocket.Event.OnConnectionOpened<*> }
                     .subscribe {
                         socket.authenticate(
@@ -197,7 +194,7 @@ class MainLoaderActivity : AppCompatActivity() {
                                 location.long.toFloat()
                             )
                         )
-                        println("<<[SND]attempt socket auth: ${userModel!!.token} @${location}")
+                        println("<<[SND]attempt auth: ${userModel!!.token} @${location}")
                     }
 
                 // observe response from the token authentication
@@ -210,14 +207,15 @@ class MainLoaderActivity : AppCompatActivity() {
                             CoroutineScope(Default).launch {
                                 setLoadingTextAsync("Connection established")
 
-                                delay(1000)
+                                delay(resources.getInteger(R.integer.STATUS_PAUSE_MS_SHORT).toLong())
                                 navToDropMessagesActivity()
                             }
                         } else if (it.category == "socket" && it.data == "closed") {
                             CoroutineScope(Default).launch {
                                 setLoadingTextAsync("Authentication failed")
                                 SocketManager.closeSocket()
-                                delay(1000)
+
+                                delay(resources.getInteger(R.integer.STATUS_PAUSE_MS_SHORT).toLong())
                                 navToUserFront()
                             }
                         }
@@ -256,7 +254,6 @@ class MainLoaderActivity : AppCompatActivity() {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray)
     {
-        println("permissions granted!")
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         waitingForPermissions = false
     }
@@ -267,7 +264,6 @@ class MainLoaderActivity : AppCompatActivity() {
     private suspend fun setLoadingTextAsync(text: String) {
         withContext(Main) {
             setLoadingText(text)
-            delay(200)
         }
     }
     @SuppressLint("SetTextI18n")

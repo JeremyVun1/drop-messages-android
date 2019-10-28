@@ -103,7 +103,7 @@
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
-                    android:layout_marginLeft="4dp"
+                    android:layout_marginStart="4dp"
                     android:layout_weight="0"
                     android:orientation="vertical">
 
@@ -112,17 +112,17 @@
                         android:layout_width="40dp"
                         android:layout_height="40dp"
                         android:layout_marginStart="5dp"
-                        android:layout_marginBottom="50dp"
                         android:background="@drawable/ic_btn_share"
-                        android:elevation="0dp" />
+                        android:elevation="2dp" />
 
                     <Button
                         android:id="@+id/btn_upvote"
                         android:layout_width="20dp"
                         android:layout_height="20dp"
+                        android:layout_marginTop="40dp"
                         android:layout_marginStart="15dp"
-                        android:background="@drawable/ic_vote_arrow_up"
-                        android:elevation="0dp" />
+                        android:elevation="2dp"
+                        android:background="@drawable/ic_vote_arrow_up" />
 
                     <TextView
                         android:id="@+id/tv_vote_count"
@@ -139,9 +139,21 @@
                         android:layout_height="20dp"
                         android:layout_marginStart="15dp"
                         android:background="@drawable/ic_vote_arrow_down"
-                        android:elevation="0dp"
+                        android:elevation="2dp"
                         tools:layout_editor_absoluteX="0dp"
                         tools:layout_editor_absoluteY="39dp" />
+
+                    <Button
+                        android:id="@+id/btn_delete"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="20dp"
+                        android:background="@drawable/ic_delete"
+                        android:backgroundTint="@color/colorPrimaryDark"
+                        android:elevation="2dp" />
+
+
                 </LinearLayout>
 
             </TableRow>

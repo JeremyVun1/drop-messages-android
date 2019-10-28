@@ -12,6 +12,9 @@
     android:clipChildren="false"
     android:clipToPadding="false">
 
+    <include layout="@layout/layout_toolbar"
+        android:id="@+id/toolbar"/>
+
     <com.example.drop_messages_android.viewpager.VerticalViewPager
         android:id="@+id/fragment_container"
         android:layout_width="370dp"

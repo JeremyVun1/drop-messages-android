@@ -38,9 +38,21 @@ object Util {
         }
         return true
     }
+
+    val MAX_MESSAGE_LENGTH = 240
 }
 
 /**
  * Extension functions
  */
 fun Float.format(digits: Int) = "%.${digits}f".format(this)
+
+/**
+ * Enums
+ */
+enum class VoteState {
+    UPVOTE,
+    DOWNVOTE,
+    NONE;
+}
+

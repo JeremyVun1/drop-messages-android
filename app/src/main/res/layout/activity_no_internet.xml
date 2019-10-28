@@ -6,12 +6,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <include layout="@layout/layout_toolbar"
+        android:id="@+id/toolbar"/>
+
     <TextView
         android:id="@+id/tv_no_internet"
         style="@style/MediumWhiteText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="236dp"
+        android:layout_marginTop="280dp"
         android:gravity="center"
         android:stateListAnimator="@null"
         android:text="@string/no_internet_text"

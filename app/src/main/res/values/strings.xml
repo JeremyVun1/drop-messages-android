@@ -49,4 +49,5 @@
     <string name="card_index_label">Welcome!</string>
     <string name="card_register_label">Create an Account</string>
     <string name="card_login_label">Log in</string>
+    <string name="card_message_hint">Enter your message…</string>
 </resources>
