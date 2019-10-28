@@ -14,11 +14,6 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <!-- for testing stuff -->
-        <activity android:name=".TestActivity">
-
-        </activity>
-
         <!-- Main loading screen for routing user, authenticating,
         and makine web socket connections on app start up -->
         <activity android:name=".MainLoaderActivity" android:noHistory="true">

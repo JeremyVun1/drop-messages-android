@@ -40,6 +40,7 @@ object Util {
     }
 
     val MAX_MESSAGE_LENGTH = 240
+    val LOCATION_INTERVAL = 1000L
 }
 
 /**

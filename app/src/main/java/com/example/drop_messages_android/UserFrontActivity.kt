@@ -8,7 +8,6 @@ import androidx.fragment.app.Fragment
 import com.example.drop_messages_android.fragments.IndexFragment
 import com.example.drop_messages_android.fragments.LoginFragment
 import com.example.drop_messages_android.fragments.RegisterFragment
-import com.example.drop_messages_android.fragments.TestFragment
 import com.example.drop_messages_android.viewpager.VerticalPageAdapter
 import com.google.gson.Gson
 import com.google.gson.JsonObject
@@ -17,9 +16,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import android.content.Intent
+import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import com.example.drop_messages_android.api.*
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.android.synthetic.main.activity_no_internet.*
+import kotlinx.android.synthetic.main.activity_user_front.toolbar
 import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.withContext
@@ -35,8 +37,9 @@ class UserFrontActivity : AppCompatActivity(), RegisterFragment.RegisterUserList
         setContentView(R.layout.activity_user_front)
         overridePendingTransition(0, 0)
 
+        setSupportActionBar(toolbar as Toolbar)
+
         initialiseUI()
-        //initTestUI()
     }
 
     private fun initialiseUI() {
@@ -52,9 +55,9 @@ class UserFrontActivity : AppCompatActivity(), RegisterFragment.RegisterUserList
     }
 
 
-    /////////////////////
-    // Fragment callbacks
-    /////////////////////
+    /**
+     * Fragment call backs
+     */
     override fun navToSignIn() {
         fragment_container.currentItem = 2
     }
@@ -81,12 +84,12 @@ class UserFrontActivity : AppCompatActivity(), RegisterFragment.RegisterUserList
             val url = resources.getString(R.string.get_token_url)
             val gson = Gson()
             val json = gson.toJson(model)
+            println("logging in user with json: $json")
 
             // make the post request with inline listeners
             Postie().sendPostRequest(applicationContext, url, json,
                 {
                     val response = gson.fromJson(it.toString(), JsonObject::class.java)
-
                     if (response.has("token")) {
                         showSnackBar("Successfully authenticated as ${model.username}!")
 
@@ -111,6 +114,7 @@ class UserFrontActivity : AppCompatActivity(), RegisterFragment.RegisterUserList
      * Then route user back to MainLoaderActivity for web socket connection creation etc.
      */
     private suspend fun signInUser(userDetails: GetTokenModel, token: String, errorListener: (err: InvalidLoginResponseModel) -> Unit) {
+        println("Attempting to sign in the user")
         if (storeUserDetails(userDetails.username, userDetails.password, token)) {
             withContext(Main) {
                 navToMainLoader() // go to the main loader activity
@@ -126,13 +130,13 @@ class UserFrontActivity : AppCompatActivity(), RegisterFragment.RegisterUserList
      */
     override fun onSignUpUser(bundle: Bundle, errorListener: (err: SignUpModel) -> Unit) {
         CoroutineScope(IO).launch {
-            val gson = Gson()
             val model = SignUpModel(bundle.getString("username") ?: "",
                 bundle.getString("password") ?: "",
                 bundle.getString("email") ?: "")
 
             val url = resources.getString(R.string.sign_up_url)
 
+            val gson = Gson()
             val json = gson.toJson(model)
             println("registering user with json: $json")
 

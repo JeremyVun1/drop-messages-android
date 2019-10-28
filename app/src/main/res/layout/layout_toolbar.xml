@@ -1,9 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.appcompat.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@color/colorPrimary"
     android:elevation="5dp"
-    >
+    style="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+    app:title="@string/app_name_formatted">
+
+    <TextView
+        android:id="@+id/tv_toolbar_geolocation"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:gravity="end"
+        android:visibility="gone"
+        android:text="@string/placeholder"/>
 
 </androidx.appcompat.widget.Toolbar>

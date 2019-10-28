@@ -15,12 +15,15 @@ import android.view.animation.LinearInterpolator
 import android.view.animation.OvershootInterpolator
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import com.example.drop_messages_android.api.*
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.tinder.scarlet.WebSocket
+import kotlinx.android.synthetic.main.activity_drop_messages.*
 import kotlinx.android.synthetic.main.activity_loading.*
 import kotlinx.android.synthetic.main.activity_no_internet.*
+import kotlinx.android.synthetic.main.activity_no_internet.toolbar
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.IO
@@ -38,6 +41,8 @@ class NoInternetActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_no_internet)
         overridePendingTransition(0, 0)
+
+        setSupportActionBar(toolbar as Toolbar)
 
         initAnimations()
 

@@ -34,6 +34,8 @@ data class DropMessage(val id: Int, val lat: Float, val long: Float, val message
 
 data class PostDataResponse(val echo: DropMessage, val result: Boolean, val meta: String)
 
+data class GeolocationResponse(val result: Boolean, val lat: Float, val long: Float)
+
 // web socket
 // send models
 data class AuthenticateSocket(val token: String, val lat: Float, val long: Float)

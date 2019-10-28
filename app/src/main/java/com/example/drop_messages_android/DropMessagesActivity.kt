@@ -1,13 +1,15 @@
 package com.example.drop_messages_android
 
-import android.Manifest.permission
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.os.Build
+import android.location.Location
 import android.os.Bundle
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.viewpager.widget.ViewPager
@@ -16,14 +18,14 @@ import com.example.drop_messages_android.fragments.CreateDropDialogFragment
 import com.example.drop_messages_android.fragments.DropMessageFragment
 import com.example.drop_messages_android.fragments.StackEmptyFragment
 import com.example.drop_messages_android.viewpager.VerticalPageAdapter
-import com.example.drop_messages_android.viewpager.VerticalViewPager
 import com.example.drop_messages_android.fragments.CreateDropDialogFragment.CreateDropListener
 import com.example.drop_messages_android.fragments.DropMessageFragment.DropMessageFragmentListener
+import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import com.tinder.scarlet.WebSocket
 import kotlinx.android.synthetic.main.activity_drop_messages.*
+import kotlinx.android.synthetic.main.layout_toolbar.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.IO
@@ -37,7 +39,7 @@ import kotlinx.coroutines.withContext
  */
 class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessageFragmentListener {
 
-    private val locationManager by lazy { LocationManager(applicationContext) }
+    private var locationHandler: LocationHandler? = null
     private val gson by lazy { Gson() }
 
     private var socket: DropMessageService? = null
@@ -56,17 +58,34 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_drop_messages)
 
+        locationHandler = LocationHandler(applicationContext)
+
         userModel = intent.getParcelableExtra("user")
         pager.offscreenPageLimit = 10
+
+        setSupportActionBar(toolbar as Toolbar)
+        loadToolbarLocationText()
 
         CoroutineScope(Default).launch {
             setupSocketHandlers()
         }
+
         setupButtonHandlers()
         setupPageLoading()
-
-        //initialiseTestUI()
         setupPageViewer()
+    }
+
+    /**
+     * Make sure we aren't doing location updating while app is not in foreground
+     */
+    override fun onResume() {
+        super.onResume()
+        locationHandler!!.connect()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        locationHandler!!.disconnect()
     }
 
     /**
@@ -167,6 +186,7 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
                         DropResponse.ERROR -> handleErrorResponses(data)
                         DropResponse.NOTIFICATION -> handleNotificationResponses(data)
                         DropResponse.TOKEN -> handleTokenResponses(data)
+                        DropResponse.GEOLOC -> handleGeolocResponse(data)
                         DropResponse.UNKNOWN -> Log.e("ERROR", "Unknown server response category")
                     }
                 }
@@ -215,6 +235,16 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
             }
 
             requesting = false
+        }
+    }
+
+    private fun handleGeolocResponse(data: String) {
+        val parentResponse = gson.fromJson(data, SocketResponse::class.java)
+        val geolocResponse = gson.fromJson(parentResponse.data, GeolocationResponse::class.java)
+
+        if (geolocResponse.result) {
+            userModel!!.location = Geolocation(geolocResponse.lat.toDouble(), geolocResponse.long.toDouble())
+            loadToolbarLocationText()
         }
     }
 
@@ -374,8 +404,8 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
                         sp.edit().putString("token", token).commit()
 
                         // get our geolocation to recreate a connection
-                        val locationManager = LocationManager(applicationContext)
-                        locationManager.updateLocation(::onLocationReceived, ::onLocationError)
+                        locationHandler!!.connect()
+                        locationHandler!!.getLastLocation(::onLocationReceived, ::onLocationError)
                     }
                 } else {
                     CoroutineScope(Default).launch {
@@ -399,44 +429,19 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
      * Callbacks for Fused location provider
      */
     private fun onLocationReceived(location: Geolocation) {
-        userModel!!.location = location
-        CoroutineScope(IO).launch {
-            println("SET UP THE SOCKET AGAIN")
-            setupConnection(location)
-        }
+        socket!!.changeGeolocation(
+            ChangeGeolocation(
+                DropRequest.CHANGE_LOC.value,
+                location.lat.toFloat(),
+                location.long.toFloat()
+            )
+        )
     }
 
     private fun onLocationError(ex: Exception) {
         Log.e("ERROR", ex.toString())
         Toast.makeText(applicationContext, "Google play services error!", Toast.LENGTH_SHORT).show()
         finish()
-    }
-
-    private suspend fun setupConnection(location: Geolocation) {
-        if (userModel!!.token == null)
-            navToMainLoader()
-        else {
-            println("DROP MESSAGE ACTIVITY CREATING SOCKET")
-            val socket = SocketManager.init(application).getWebSocket()
-
-            // send authentication token as soon as web socket is opened
-            socket!!.observeWebSocketEvent()
-                .filter { it is WebSocket.Event.OnConnectionOpened<*> }
-                .subscribe {
-                    socket.authenticate(
-                        AuthenticateSocket(
-                            userModel!!.token as String,
-                            location.lat.toFloat(),
-                            location.long.toFloat()
-                        )
-                    )
-                    println("<<[SND]Authenticate: ${userModel!!.token} @${location}")
-                }
-
-            withContext(Main) {
-                setupSocketHandlers()
-            }
-        }
     }
 
     /**
@@ -453,6 +458,12 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
     /**
      * Navigation function
      */
+    private suspend fun navToMainLoaderAsync() {
+        withContext(Main) {
+            navToMainLoader()
+        }
+    }
+
     private fun navToMainLoader() {
         val i = Intent(applicationContext, MainLoaderActivity::class.java)
         startActivity(i)
@@ -488,6 +499,47 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
         val textColor = ContextCompat.getColor(applicationContext, R.color.colorLightHint)
 
         snack.setActionTextColor(actionColor).setTextColor(textColor).show()
+    }
+
+    /**
+     * Toolbar functions
+     */
+    private fun loadToolbarLocationText() {
+        val toolbarLocText = "(${userModel?.location?.lat}, ${userModel?.location?.long})"
+        tv_toolbar_geolocation.text = toolbarLocText
+        tv_toolbar_geolocation.visibility = View.VISIBLE
+    }
+
+    private fun logout() {
+        CoroutineScope(Default).launch {
+            // clear user details from shared preferences
+            val sp = getSharedPreferences("Login", MODE_PRIVATE)
+            sp.edit().clear().commit()
+            socket!!.close(CloseSocket(DropRequest.DISCONNECT.value))
+            //SocketManager.closeSocket()
+
+            // nav to user front
+            navToMainLoaderAsync()
+        }
+    }
+
+    private fun changeLocation() {
+        locationHandler!!.connect()
+        locationHandler!!.getLastLocation(::onLocationReceived, ::onLocationError)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.opt_logout -> logout()
+            R.id.opt_refresh -> changeLocation()
+        }
+
+        return super.onOptionsItemSelected(item)
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.global_menu, menu)
+        return true
     }
 
     /**

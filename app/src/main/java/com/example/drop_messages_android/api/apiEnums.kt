@@ -22,6 +22,7 @@ enum class DropResponse(val value: String) {
     ERROR("error"),
     TOKEN("token"),
     NOTIFICATION("notify"),
+    GEOLOC("geoloc"),
     UNKNOWN("unknown");
 
     companion object {

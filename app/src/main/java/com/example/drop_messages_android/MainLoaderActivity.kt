@@ -16,7 +16,7 @@ import android.view.animation.OvershootInterpolator
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.drop_messages_android.api.*
-import com.google.android.gms.common.GoogleApiAvailability
+import com.google.android.gms.common.api.GoogleApiClient
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.tinder.scarlet.WebSocket
@@ -37,13 +37,18 @@ class MainLoaderActivity : AppCompatActivity() {
     var waitingForPermissions = false
     var userModel : UserModel? = null
 
+    private var locationHandler: LocationHandler? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_loading)
+
+        locationHandler = LocationHandler(applicationContext)
     }
 
     /**
      * Do stuff in onResume so that we can also "restart" the activity on back button
+     * Also prevents user from being sneaky and bypassing permissions
      */
     override fun onResume() {
         super.onResume()
@@ -126,8 +131,8 @@ class MainLoaderActivity : AppCompatActivity() {
                         userModel!!.token = token
 
                         setLoadingText("Fetching current location")
-                        val locationManager = LocationManager(applicationContext)
-                        locationManager.updateLocation(::onLocationReceived, ::onLocationError)
+                        locationHandler!!.connect()
+                        locationHandler!!.getLastLocation(::onLocationReceived, ::onLocationError)
                     }
                 }
                 else {

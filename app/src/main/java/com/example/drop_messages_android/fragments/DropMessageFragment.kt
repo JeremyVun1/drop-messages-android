@@ -41,10 +41,13 @@ class DropMessageFragment : Fragment() {
         if (model != null) {
             msgId = model.id
 
-            val geoloc = "${model.lat.format(2)}, ${model.long.format(2)}"
-            val author = "${model.author} @($geoloc)"
+            val lat = model.lat.format(2)
+            val long = model.long.format(2)
+            val geoloc = "$lat, $long"
 
-            rootView.tv_author.text = author
+            rootView.tv_lat.text = "latitude: $lat"
+            rootView.tv_long.text = "longtitude: $long"
+            rootView.tv_author.text = model.author
             rootView.tv_date.text = model.date
             rootView.tv_drop_message.text = model.message
             rootView.tv_seen_count.text = (model.seen + 1).toString()
