@@ -71,8 +71,7 @@ object SocketManager {
             .writeTimeout(10, TimeUnit.SECONDS)
             .build()
 
-        val lifecycle = //AndroidLifecycle.ofApplicationForeground(application)
-            lifecycleSwitch
+        val lifecycle = AndroidLifecycle.ofApplicationForeground(application).combineWith(lifecycleSwitch)
 
         val backoffStrategy = ExponentialWithJitterBackoffStrategy(5000, 5000)
 

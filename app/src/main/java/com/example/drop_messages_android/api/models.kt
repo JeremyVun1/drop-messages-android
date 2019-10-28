@@ -38,7 +38,7 @@ data class GeolocationResponse(val result: Boolean, val lat: Float, val long: Fl
 
 // web socket
 // send models
-data class AuthenticateSocket(val token: String, val lat: Float, val long: Float)
+data class AuthenticateSocket(val category: Int, val token: String, val lat: Float, val long: Float)
 data class ChangeGeolocation(val category: Int, val lat: Float, val long: Float)
 data class CreateDrop(val category: Int, val data: String)
 data class RequestDrops(val category: Int, val page: Int)

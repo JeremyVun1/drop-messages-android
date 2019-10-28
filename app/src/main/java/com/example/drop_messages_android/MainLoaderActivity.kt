@@ -194,6 +194,7 @@ class MainLoaderActivity : AppCompatActivity() {
                     .subscribe {
                         socket.authenticate(
                             AuthenticateSocket(
+                                DropRequest.AUTHENTICATE.value,
                                 userModel!!.token as String,
                                 location.lat.toFloat(),
                                 location.long.toFloat()

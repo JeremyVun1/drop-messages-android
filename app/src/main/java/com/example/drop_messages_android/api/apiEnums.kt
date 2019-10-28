@@ -11,7 +11,8 @@ enum class DropRequest(val value: Int) {
     UPVOTE(7),
     DOWNVOTE(8),
     DISCONNECT(9),
-    DELETE(10);
+    DELETE(10),
+    AUTHENTICATE(11);
 }
 
 enum class DropResponse(val value: String) {

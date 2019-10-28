@@ -5,6 +5,9 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import androidx.viewpager.widget.ViewPager
+import com.example.drop_messages_android.R
+import com.example.drop_messages_android.fragments.CreateDropDialogFragment
+import com.example.drop_messages_android.fragments.DropMessageFragment
 import kotlinx.android.synthetic.main.card_test.view.*
 import kotlin.math.max
 import kotlin.math.min

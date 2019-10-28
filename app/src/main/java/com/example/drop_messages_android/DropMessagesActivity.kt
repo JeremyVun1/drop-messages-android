@@ -200,12 +200,8 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
 
         if (response.result) {
             try {
-                println("RESPONSE SUCCESS")
-                println(response.meta)
-                val fragment = createDropMessageFragment(response.echo)
-
                 val geolocStr = "(${response.echo.lat.format(2)}, ${response.echo.long.format(2)})"
-                addFragmentToPageViewer(fragment, "Message dropped at $geolocStr")
+                showSnackBarWithJump("Message dropped at $geolocStr", response)
             } catch (ex: Exception) {
                 Log.e("ERROR", Log.getStackTraceString(ex))
             }
@@ -239,11 +235,11 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
     }
 
     private fun handleGeolocResponse(data: String) {
-        val parentResponse = gson.fromJson(data, SocketResponse::class.java)
-        val geolocResponse = gson.fromJson(parentResponse.data, GeolocationResponse::class.java)
+        val response = gson.fromJson(data, GeolocationResponse::class.java)
+        println("RESPONSE $response")
 
-        if (geolocResponse.result) {
-            userModel!!.location = Geolocation(geolocResponse.lat.toDouble(), geolocResponse.long.toDouble())
+        if (response.result) {
+            userModel!!.location = Geolocation(response.lat.toDouble(), response.long.toDouble())
             loadToolbarLocationText()
         }
     }
@@ -266,7 +262,7 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
             else {
                 pageAdapter!!.addFragment(fragment)
                 println("SIZE: ${fragments!!.size}")
-                showSnackBarWithJump(text, fragments!!.size-1)
+                showSnackBar(text)
             }
         }
     }
@@ -320,8 +316,7 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
 
         if (pageAdapter == null)
             pageAdapter = VerticalPageAdapter(fragmentList, supportFragmentManager)
-
-        pageAdapter!!.setFragments(fragmentList)
+        else pageAdapter!!.setFragments(fragmentList)
 
         pager.reset()
         pager.adapter = pageAdapter
@@ -488,11 +483,16 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
         snack.setActionTextColor(actionColor).setTextColor(textColor).show()
     }
 
-    private fun showSnackBarWithJump(text: String, position: Int) {
-        println("jumping to $position")
+    private fun showSnackBarWithJump(text: String, response: PostDataResponse) {
+
         val snack = Snackbar.make(root_container, text, Snackbar.LENGTH_LONG)
         snack.setAction("View it!") {
-            pager.currentItem = position
+            val fragment = createDropMessageFragment(response.echo)
+            val list = mutableListOf(fragment)
+            fragments = list
+            pageNumber = 1
+            lastRequest = null
+            loadFragmentsIntoPageViewer(list)
         }
 
         val actionColor = ContextCompat.getColor(applicationContext, R.color.colorAccent)
@@ -505,9 +505,11 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
      * Toolbar functions
      */
     private fun loadToolbarLocationText() {
-        val toolbarLocText = "(${userModel?.location?.lat}, ${userModel?.location?.long})"
-        tv_toolbar_geolocation.text = toolbarLocText
-        tv_toolbar_geolocation.visibility = View.VISIBLE
+        CoroutineScope(Main).launch {
+            val toolbarLocText = "(${userModel?.location?.lat}, ${userModel?.location?.long})"
+            tv_toolbar_geolocation.text = toolbarLocText
+            tv_toolbar_geolocation.visibility = View.VISIBLE
+        }
     }
 
     private fun logout() {
@@ -515,8 +517,9 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
             // clear user details from shared preferences
             val sp = getSharedPreferences("Login", MODE_PRIVATE)
             sp.edit().clear().commit()
+
             socket!!.close(CloseSocket(DropRequest.DISCONNECT.value))
-            //SocketManager.closeSocket()
+            SocketManager.closeSocket()
 
             // nav to user front
             navToMainLoaderAsync()
@@ -540,6 +543,12 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.global_menu, menu)
         return true
+    }
+
+    override fun onStop() {
+        super.onStop()
+
+        socket?.close(CloseSocket(DropRequest.DISCONNECT.value))
     }
 
     /**
