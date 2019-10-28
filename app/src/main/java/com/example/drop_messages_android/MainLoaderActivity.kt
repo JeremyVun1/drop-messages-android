@@ -4,6 +4,7 @@ import android.Manifest.permission
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
 import android.annotation.SuppressLint
+import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -30,8 +31,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 
-// This is the main entry point which checks whether to route the user to the login/signup pages
-// or directly launch the activity with stored credentials
+/**
+ * Main entry point that routes user either to sign in/register or to the main activity
+ * based on whether they were previously logged in or not. Handles web socket creation, authentication etc.
+ */
 class MainLoaderActivity : AppCompatActivity() {
 
     var waitingForPermissions = false
@@ -158,7 +161,9 @@ class MainLoaderActivity : AppCompatActivity() {
     }
 
 
-    // event listener for location manager
+    /**
+     * Event listeners for google location services
+     */
     private fun onLocationReceived(location: Geolocation) {
         userModel!!.location = location
         println("location gotten: $location")
@@ -175,6 +180,9 @@ class MainLoaderActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Set up the web socket and authenticate it with server
+     */
     private suspend fun setupConnection(location: Geolocation) {
         withContext(Main) {
             if (userModel!!.token == null) {
@@ -207,13 +215,13 @@ class MainLoaderActivity : AppCompatActivity() {
                 socket.observeAuthResponse()
                     .subscribe {
                         println(">>[REC]: $it")
-                        if (it.category == "socket" && it.data == "open") {
-                            println("SOCKET AUTHENTICATED")
+                        if (it.category == "socket" && it.data == "open" && !SocketManager.authenticated) {
+                            SocketManager.authenticated = true
 
                             CoroutineScope(Default).launch {
                                 setLoadingTextAsync("Connection established")
-
                                 delay(resources.getInteger(R.integer.STATUS_PAUSE_MS_SHORT).toLong())
+
                                 navToDropMessagesActivity()
                             }
                         } else if (it.category == "socket" && it.data == "closed") {
@@ -222,7 +230,9 @@ class MainLoaderActivity : AppCompatActivity() {
                                 SocketManager.closeSocket()
 
                                 delay(resources.getInteger(R.integer.STATUS_PAUSE_MS_SHORT).toLong())
-                                navToUserFront()
+
+                                if (applicationContext is MainLoaderActivity)
+                                    navToUserFront()
                             }
                         }
                     }
@@ -278,7 +288,7 @@ class MainLoaderActivity : AppCompatActivity() {
     }
 
     /**
-     * Navigation function
+     * Navigation functions
      */
     private suspend fun navToUserFront() {
         withContext(Main) {

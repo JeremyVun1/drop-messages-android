@@ -25,6 +25,8 @@ object SocketManager {
     private lateinit var lifecycleSwitch: LifecycleRegistry
     private var open: Boolean = false
 
+    var authenticated = false
+
     fun init(app: Application) : SocketManager {
         if (::socket.isInitialized) {
             openSocket()
@@ -45,12 +47,14 @@ object SocketManager {
     }
 
     fun closeSocket() {
-        lifecycleSwitch.onNext(Lifecycle.State.Stopped.WithReason(ShutdownReason.GRACEFUL))
-        open = false
+        if (open) {
+            lifecycleSwitch.onNext(Lifecycle.State.Stopped.WithReason(ShutdownReason.GRACEFUL))
+            open = false
+        }
     }
 
     fun openSocket() {
-        if (!open) {
+        if (::socket.isInitialized && !open) {
             lifecycleSwitch.onNext(Lifecycle.State.Started)
             open = true
         }

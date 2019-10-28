@@ -77,15 +77,18 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
 
     /**
      * Make sure we aren't doing location updating while app is not in foreground
+     * Close web socket as well
      */
     override fun onResume() {
         super.onResume()
         locationHandler!!.connect()
+        SocketManager.openSocket()
     }
 
     override fun onPause() {
         super.onPause()
         locationHandler!!.disconnect()
+        SocketManager.closeSocket()
     }
 
     /**
@@ -107,6 +110,7 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
         }
 
         btn_map.setOnClickListener {
+            // TODO - gmap integration
             println("go to map")
         }
     }
@@ -543,12 +547,6 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.global_menu, menu)
         return true
-    }
-
-    override fun onStop() {
-        super.onStop()
-
-        socket?.close(CloseSocket(DropRequest.DISCONNECT.value))
     }
 
     /**
