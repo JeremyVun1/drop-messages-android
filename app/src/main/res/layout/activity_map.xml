@@ -26,24 +26,19 @@
             android:layout_height="0dp" />
     </LinearLayout>
 
-    <fragment
-        android:id="@+id/map_fragment"
-        android:name="com.google.android.gms.maps.MapFragment"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:context=".MapsActivity" />
-
     <LinearLayout
         android:id="@+id/map_fragment_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="50"
         android:orientation="horizontal"
-        android:visibility="gone">
+        android:visibility="visible">
 
-        <com.google.android.gms.maps.MapView
-            android:id="@+id/map_view"
-            android:layout_width="0dp"
-            android:layout_height="0dp"/>
+        <fragment
+            android:id="@+id/google_map_fragment"
+            android:name="com.google.android.gms.maps.SupportMapFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:context=".MapsActivity" />
     </LinearLayout>
 </LinearLayout>

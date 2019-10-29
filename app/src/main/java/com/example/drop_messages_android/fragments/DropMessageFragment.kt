@@ -39,15 +39,17 @@ class DropMessageFragment : Fragment() {
         super.onStart()
 
         val args = arguments
-        val model = args!!.getParcelable<DropMessage>("model")
-        val canDelete = args.getBoolean("canDelete")
-        if (!canDelete)
-            btn_delete.visibility = View.GONE
+        if (args != null) {
+            val model = args.getParcelable<DropMessage>("model")
+            val canDelete = args.getBoolean("canDelete")
+            if (!canDelete)
+                btn_delete.visibility = View.GONE
 
-        if (model != null)
-            loadModel(model)
+            if (model != null)
+                loadModel(model)
 
-        setupButtonHandlers(canDelete)
+            setupButtonHandlers(canDelete)
+        }
     }
 
     override fun onAttach(context: Context) {

@@ -26,6 +26,7 @@ import kotlinx.android.synthetic.main.layout_toolbar.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.Default
+import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -37,6 +38,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
     private lateinit var mapFragment: GoogleMap
     private var locationHandler: LocationHandler? = null
     private var pickupFragment: DropMessageFragment? = null
+    private var lastMarkerClicked: Int = -1
 
     private var sockSubscriber: Disposable? = null
     private val socket by lazy { SocketManager.getWebSocket() }
@@ -54,7 +56,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
         locationHandler = LocationHandler(applicationContext)
 
         // get google maps
-        MapFragment().getMapAsync(this)
+        val mf = supportFragmentManager.findFragmentById(R.id.google_map_fragment) as SupportMapFragment
+        mf.getMapAsync(this)
     }
 
     /**
@@ -111,19 +114,19 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
      */
     private fun handleGeolocResponse(data: String) {
         val response = gson.fromJson(data, GeolocationResponse::class.java)
-        println("RESPONSE $response")
+        println("GEOLOC RESPONSE $response")
 
         if (response.result) {
             val currLoc = userModel!!.location
 
-            if (currLoc!!.lat.round(2) != response.lat.toDouble().round(2)) {
+            //if (currLoc!!.lat.round(2) != response.lat.toDouble().round(2)) {
                 //our geolocation block has changed
                 userModel!!.location = Geolocation(response.lat.toDouble(), response.long.toDouble())
                 loadToolbarLocationText()
 
                 // request message stubs for new geolocation block
                 requestMessageStubs()
-            }
+            //}
         }
 
         requesting = false
@@ -135,28 +138,35 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
 
         // add new fragment if none exists, else replace the one we already have
         // No need to recreate a fragment and replace it if one already exists
-        if (pickupFragment == null) {
-            val newFrag = createDropMessageFragment(response)
-            pickupFragment = newFrag as DropMessageFragment
+        CoroutineScope(Main).launch {
+            if (pickupFragment == null) {
+                val newFrag = createDropMessageFragment(response)
+                pickupFragment = newFrag as DropMessageFragment
 
-            supportFragmentManager.beginTransaction()
-                .add(R.id.map_pickup_container, newFrag, "map_pickup_fragment")
-                .commit()
+                supportFragmentManager.beginTransaction()
+                    .add(R.id.map_pickup_container, newFrag, "map_pickup_fragment")
+                    .commit()
+            } else pickupFragment!!.loadModel(response)
+
+            requesting = false
         }
-        else pickupFragment!!.loadModel(response)
 
         openPickupContainer()
     }
 
     private fun openPickupContainer() {
-        if (map_pickup_container.visibility == View.GONE) {
-            map_pickup_container.visibility = View.VISIBLE
+        CoroutineScope(Main).launch {
+            if (map_pickup_container.visibility == View.GONE) {
+                map_pickup_container.visibility = View.VISIBLE
+            }
         }
     }
 
     private fun closePickupContainer() {
-        if (map_pickup_container.visibility == View.VISIBLE) {
-            map_pickup_container.visibility = View.GONE
+        CoroutineScope(Main).launch {
+            if (map_pickup_container.visibility == View.VISIBLE) {
+                map_pickup_container.visibility = View.GONE
+            }
         }
     }
 
@@ -174,17 +184,20 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
             navToMainLoader()
         }
 
-        mapFragment.clear()
-        for (stub in response) {
-            mapFragment.addMarker(
-                MarkerOptions()
-                    .position(LatLng(stub.lat.toDouble(), stub.long.toDouble()))
-                    .title(stub.author)
-            )
-        }
+        CoroutineScope(Main).launch {
+            mapFragment.clear()
+            for (stub in response) {
+                val marker = mapFragment.addMarker(
+                    MarkerOptions()
+                        .position(LatLng(stub.lat.toDouble(), stub.long.toDouble()))
+                        .title(stub.author)
+                )
+                marker.tag = stub.id
+            }
 
-        val focus = LatLng(location!!.lat, location.long)
-        mapFragment.moveCamera(CameraUpdateFactory.newLatLng(focus))
+            val focus = LatLng(location!!.lat, location.long)
+            mapFragment.moveCamera(CameraUpdateFactory.newLatLngZoom(focus, 20f))
+        }
 
         requesting = false
     }
@@ -225,8 +238,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
     }
 
     private fun requestMessageStubs() {
+        println("requesting stubs called requesting: $requesting")
         if (!requesting) {
+            println("requesting stubs")
             socket!!.requestStubs(RequestStubs(DropRequest.GET_STUBS.value))
+            println("request stubs message sent")
             requesting = true
         }
     }
@@ -274,19 +290,25 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
      * Callback for google maps stuff
      */
     override fun onMapReady(map: GoogleMap) {
+        println("map is ready!")
         mapFragment = map
 
         // clicking a marker will request the full msg from the server
         mapFragment.setOnMarkerClickListener {marker ->
-            if (marker.isInfoWindowShown) {
-                closePickupContainer()
+            val id = (marker.tag as String).toInt()
+            if (lastMarkerClicked == id) {
+                println("closing info window")
                 marker.hideInfoWindow()
+                closePickupContainer()
             } else {
+                lastMarkerClicked = id
                 marker.showInfoWindow()
                 socket!!.requestSingle(RequestSingle(data=marker.tag as String))
             }
             true
         }
+
+        requestMessageStubs()
     }
 
     /**
@@ -299,7 +321,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
         val snack = Snackbar.make(root_container, text, Snackbar.LENGTH_LONG)
 
         snack.setAction("View it!") {
-            mapFragment.moveCamera(CameraUpdateFactory.newLatLng(loc))
+            mapFragment.moveCamera(CameraUpdateFactory.newLatLngZoom(loc, 20f))
         }
     }
 
@@ -364,6 +386,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
      * Callbacks for Fused location provider
      */
     private fun onLocationReceived(location: Geolocation) {
+        println("location received")
         socket!!.changeGeolocation(
             ChangeGeolocation(
                 DropRequest.CHANGE_LOC.value,
@@ -371,8 +394,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
                 location.long.toFloat()
             )
         )
+        println("change geolocation sent")
 
-        requesting = true
+        requesting = false
     }
 
     private fun onLocationError(ex: Exception) {
@@ -412,6 +436,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
     }
 
     private fun changeLocation() {
+        println("change location called")
         locationHandler!!.connect()
         locationHandler!!.getLastLocation(::onLocationReceived, ::onLocationError)
     }
