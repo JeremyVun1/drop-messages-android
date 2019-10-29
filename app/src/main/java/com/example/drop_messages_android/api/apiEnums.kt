@@ -12,7 +12,9 @@ enum class DropRequest(val value: Int) {
     DOWNVOTE(8),
     DISCONNECT(9),
     DELETE(10),
-    AUTHENTICATE(11);
+    AUTHENTICATE(11),
+    GET_SINGLE(12),
+    GET_STUBS(13)
 }
 
 enum class DropResponse(val value: String) {
@@ -24,6 +26,8 @@ enum class DropResponse(val value: String) {
     TOKEN("token"),
     NOTIFICATION("notify"),
     GEOLOC("geoloc"),
+    SINGLE("single"),
+    STUBS("stubs"),
     UNKNOWN("unknown");
 
     companion object {

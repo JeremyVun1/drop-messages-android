@@ -24,6 +24,7 @@ import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.activity_drop_messages.*
 import kotlinx.android.synthetic.main.layout_toolbar.*
 import kotlinx.coroutines.CoroutineScope
@@ -43,6 +44,7 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
     private val gson by lazy { Gson() }
 
     private var socket: DropMessageService? = null
+    private var socketSubscriber: Disposable? = null
     private var userModel: UserModel? = null
 
     private var lastRequest: DropRequest? = null
@@ -66,10 +68,6 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
         setSupportActionBar(toolbar as Toolbar)
         loadToolbarLocationText()
 
-        CoroutineScope(Default).launch {
-            setupSocketHandlers()
-        }
-
         setupButtonHandlers()
         setupPageLoading()
         setupPageViewer()
@@ -77,17 +75,19 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
 
     /**
      * Make sure we aren't doing location updating while app is not in foreground
-     * Close web socket as well
+     * Also make sure our web socket is dead
      */
     override fun onResume() {
         super.onResume()
         locationHandler!!.connect()
         SocketManager.openSocket()
+        setupSocketListeners()
     }
 
     override fun onPause() {
         super.onPause()
         locationHandler!!.disconnect()
+        socketSubscriber?.dispose()
         SocketManager.closeSocket()
     }
 
@@ -110,8 +110,7 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
         }
 
         btn_map.setOnClickListener {
-            // TODO - gmap integration
-            println("go to map")
+            navToMap()
         }
     }
 
@@ -166,7 +165,7 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
     /**
      * handling different socket REQUEST & RESPONSES messages
      */
-    private fun setupSocketHandlers() {
+    private fun setupSocketListeners() {
         if (!Util.hasInternet(applicationContext))
             navToNoInternet()
 
@@ -177,7 +176,7 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
         }
         else {
             // Socket response routing
-            socket!!.observeSocketResponse()
+            socketSubscriber = socket!!.observeSocketResponse()
                 .subscribe {
                     val category = it.category
                     val data = it.data
@@ -242,10 +241,18 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
         val response = gson.fromJson(data, GeolocationResponse::class.java)
         println("RESPONSE $response")
 
+
         if (response.result) {
-            userModel!!.location = Geolocation(response.lat.toDouble(), response.long.toDouble())
-            loadToolbarLocationText()
+            val currLoc = userModel!!.location
+
+            if (currLoc!!.lat.round(2) != response.lat.toDouble().round(2)) {
+                // our new geolocation block is different, so update
+                userModel!!.location = Geolocation(response.lat.toDouble(), response.long.toDouble())
+                loadToolbarLocationText()
+            }
         }
+
+        requesting = false
     }
 
     private fun handleNotificationResponses(data: String) {
@@ -435,6 +442,8 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
                 location.long.toFloat()
             )
         )
+
+        requesting = true
     }
 
     private fun onLocationError(ex: Exception) {
@@ -444,19 +453,14 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
     }
 
     /**
-     * Handle permission requests
-     */
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-    }
-
-    /**
      * Navigation function
      */
+    private fun navToMap() {
+        val i = Intent(applicationContext, MapsActivity::class.java)
+        i.putExtra("user", userModel)
+        startActivity(i)
+    }
+
     private suspend fun navToMainLoaderAsync() {
         withContext(Main) {
             navToMainLoader()
@@ -522,9 +526,6 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
             val sp = getSharedPreferences("Login", MODE_PRIVATE)
             sp.edit().clear().commit()
 
-            socket!!.close(CloseSocket(DropRequest.DISCONNECT.value))
-            SocketManager.closeSocket()
-
             // nav to user front
             navToMainLoaderAsync()
         }
@@ -535,6 +536,9 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
         locationHandler!!.getLastLocation(::onLocationReceived, ::onLocationError)
     }
 
+    /**
+     * Toolbar stuff
+     */
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.opt_logout -> logout()

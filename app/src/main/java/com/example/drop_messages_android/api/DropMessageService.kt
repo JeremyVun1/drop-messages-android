@@ -41,6 +41,12 @@ interface DropMessageService {
     @Send
     fun delete(model: Delete)
 
+    @Send
+    fun requestStubs(model: RequestStubs)
+
+    @Send
+    fun requestSingle(model: RequestSingle)
+
     /**
      * Response message models
      */

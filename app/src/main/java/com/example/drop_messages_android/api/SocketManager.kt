@@ -48,6 +48,7 @@ object SocketManager {
 
     fun closeSocket() {
         if (open) {
+            socket.close(CloseSocket(DropRequest.DISCONNECT.value))
             lifecycleSwitch.onNext(Lifecycle.State.Stopped.WithReason(ShutdownReason.GRACEFUL))
             open = false
         }

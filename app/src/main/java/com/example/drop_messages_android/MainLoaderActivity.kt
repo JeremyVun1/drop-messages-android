@@ -1,6 +1,5 @@
 package com.example.drop_messages_android
 
-import android.Manifest.permission
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
 import android.annotation.SuppressLint
@@ -58,32 +57,68 @@ class MainLoaderActivity : AppCompatActivity() {
 
         initAnimations()
 
+        /**
+         * Perform checks
+         * 1) google services is available
+         * 2) user has gps
+         * 3) location and internet permissions
+         */
+
+        //Check google play services
         setLoadingText("Checking Google Play Availability")
         if (!Util.hasGooglePlayServices(applicationContext)) {
-            setLoadingText("Google play services not found!")
-            finish()
+            CoroutineScope(Main).launch {
+                setLoadingTextAsync("Google play services not found!")
+                delay(resources.getInteger(R.integer.STATUS_PAUSE_MS_LONG).toLong())
+                finish()
+            }
+        }
+        // check gps
+        if (!Util.hasGpsProvider(applicationContext)) {
+            CoroutineScope(Main).launch {
+                setLoadingTextAsync("No GPS provider found")
+                delay(resources.getInteger(R.integer.STATUS_PAUSE_MS_LONG).toLong())
+                finish()
+            }
         }
 
-        CoroutineScope(Default).launch {
-            handlePermissionRequests()
+        Util.getPermissions(this)
 
+        CoroutineScope(Default).launch {
             //spin while we wait for user to respond to a potential permission request
-            while (waitingForPermissions) { delay(100) }
+            while (Util.waitingForPermissions) { delay(100) }
 
             handleRouting()
         }
     }
 
+    /**
+     * permission request callback
+     */
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray)
+    {
+        if (grantResults.isEmpty()) {
+            CoroutineScope(Default).launch {
+                setLoadingTextAsync("App requires location permissions")
+                delay(resources.getInteger(R.integer.STATUS_PAUSE_MS_LONG).toLong())
+                finish()
+            }
+        }
+        else {
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+            Util.waitingForPermissions = false
+        }
+    }
 
     /**
      * Need to handle 3 states
-     * 1) User has no internet
+     * 1) User has no internet connection
      * 2) User details are not stored
-     *      - route to UserFrontActivity
+     *      - route to UserFrontActivity where user logs in / registers
      * 3) User details are stored
-     *      - make token request
-     *      - attempt to create web socket connection
-     *      - route to MainActivity
+     *      - get JWT token from server
+     *      - create web socket and authenticate with JWT
+     *      - route to Drop Message Activity
      */
     private suspend fun handleRouting() {
         withContext(IO) {
@@ -241,40 +276,6 @@ class MainLoaderActivity : AppCompatActivity() {
     }
 
     /**
-     * Handle permission requests
-     */
-    private suspend fun handlePermissionRequests() {
-        val permissions = mutableListOf<String>()
-
-        // check internet
-        if (!hasPermission(permission.INTERNET))
-            permissions.add(permission.INTERNET)
-
-        // location permissions
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (!hasPermission(permission.ACCESS_FINE_LOCATION))
-                permissions.add(permission.ACCESS_FINE_LOCATION)
-            if (!hasPermission(permission.ACCESS_COARSE_LOCATION))
-                permissions.add(permission.ACCESS_COARSE_LOCATION)
-        }
-
-        if (permissions.size > 0) {
-            waitingForPermissions = true
-            requestPermissions(permissions.toTypedArray(), 1)
-        }
-    }
-
-    private suspend fun hasPermission(permission: String) : Boolean {
-        return checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray)
-    {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        waitingForPermissions = false
-    }
-
-    /**
      * utility functions to change the output of our loading text
      */
     private suspend fun setLoadingTextAsync(text: String) {
@@ -308,8 +309,8 @@ class MainLoaderActivity : AppCompatActivity() {
     private fun navToDropMessagesActivity() {
         val i = Intent(applicationContext, DropMessagesActivity::class.java)
         i.putExtra("user", userModel)
-
         startActivity(i)
+
         finish() // back button should not come back to the main loader
     }
 
