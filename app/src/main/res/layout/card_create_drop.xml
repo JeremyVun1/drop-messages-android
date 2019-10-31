@@ -11,14 +11,14 @@
 
     <ImageView
         android:id="@+id/imageView"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:srcCompat="@drawable/ic_drop_card_create"
+        android:layout_margin="0dp"
         android:background="@drawable/shadow_small"
         android:elevation="0dp"
         android:padding="0dp"
-        android:layout_margin="0dp"
-        android:stateListAnimator="@null"/>
+        android:stateListAnimator="@null"
+        app:srcCompat="@drawable/ic_drop_card_create" />
 
     <LinearLayout
         android:id="@+id/content_container"

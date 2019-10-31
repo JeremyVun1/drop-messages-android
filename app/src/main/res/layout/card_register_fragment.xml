@@ -34,7 +34,7 @@
             android:id="@+id/action_hint_container"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="65dp"
+            android:layout_marginTop="85dp"
             android:gravity="center_horizontal"
             android:orientation="vertical">
 
@@ -178,7 +178,7 @@
             android:id="@+id/signin_opt_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="35dp"
+            android:layout_marginTop="50dp"
             android:gravity="center_horizontal"
             android:orientation="horizontal">
 
@@ -207,8 +207,8 @@
             android:layout_height="match_parent"
             android:layout_marginTop="25dp"
             android:gravity="bottom"
-            android:paddingBottom="15dp"
-            android:text="@string/card_register_label"
+            android:paddingBottom="25dp"
+            android:text="@string/card_login_label"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.502"

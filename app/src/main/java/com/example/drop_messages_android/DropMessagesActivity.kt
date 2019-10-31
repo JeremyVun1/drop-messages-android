@@ -80,6 +80,7 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
     override fun onResume() {
         super.onResume()
         locationHandler!!.connect()
+
         SocketManager.openSocket()
         setupSocketListeners()
     }
@@ -87,8 +88,9 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
     override fun onPause() {
         super.onPause()
         locationHandler!!.disconnect()
-        socketSubscriber?.dispose()
+
         SocketManager.closeSocket()
+        socketSubscriber?.dispose()
     }
 
     /**
@@ -188,7 +190,6 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
                         DropResponse.RETRIEVE -> handleRetrieveResponses(data)
                         DropResponse.ERROR -> handleErrorResponses(data)
                         DropResponse.NOTIFICATION -> handleNotificationResponses(data)
-                        DropResponse.TOKEN -> handleTokenResponses(data)
                         DropResponse.GEOLOC -> handleGeolocResponse(data)
                         DropResponse.UNKNOWN -> Log.e("ERROR", "Unknown server response category")
                     }
@@ -241,13 +242,13 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
         val response = gson.fromJson(data, GeolocationResponse::class.java)
         println("RESPONSE $response")
 
-
         if (response.result) {
             val currLoc = userModel!!.location
 
             if (currLoc!!.lat.round(2) != response.lat.toDouble().round(2)) {
                 // our new geolocation block is different, so update
                 userModel!!.location = Geolocation(response.lat.toDouble(), response.long.toDouble())
+                SocketManager.setNewUserLocation(userModel!!)
                 loadToolbarLocationText()
             }
         }
@@ -295,15 +296,6 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
 
     private fun handleErrorResponses(data: String) {
         Log.e("ERROR", data)
-    }
-
-    private fun handleTokenResponses(data: String) {
-        Log.d("DEBUG", data)
-
-        // We need to get a new, fresh JWT token
-        CoroutineScope(IO).launch {
-            fetchJsonWebToken()
-        }
     }
 
     /**
@@ -372,63 +364,6 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
             socket!!.delete(Delete(DropRequest.DELETE.value, id.toString()))
             removeFragmentFromPageViewer(id)
         }
-    }
-
-    /**
-     * For refreshing JWT when it expires
-     */
-    private suspend fun fetchJsonWebToken() {
-        val url = resources.getString(R.string.get_token_url)
-        val gson = Gson()
-        if (userModel == null) {
-            Log.e("ERROR", "Must be logged in to refresh token")
-            navToMainLoader()
-        }
-        val json = gson.toJson(
-            GetTokenModel(
-                userModel!!.username as String,
-                userModel!!.password as String
-            )
-        )
-
-        // ask mr postie to request a new token
-        Postie().sendPostRequest(applicationContext, url, json,
-            {
-                val response = gson.fromJson(it.toString(), JsonObject::class.java)
-                if (response.has("token")) {
-                    println("JWT response: ${response["token"]}")
-
-                    //strip any " chars pended on by the api server
-                    val token = response["token"].toString()
-                        .removePrefix("\"")
-                        .removeSuffix("\"")
-
-                    // save the new token in memory and in shared preferences
-                    userModel!!.token = token
-                    CoroutineScope(IO).launch {
-                        val sp = getSharedPreferences("Login", MODE_PRIVATE)
-                        sp.edit().putString("token", token).commit()
-
-                        // get our geolocation to recreate a connection
-                        locationHandler!!.connect()
-                        locationHandler!!.getLastLocation(::onLocationReceived, ::onLocationError)
-                    }
-                } else {
-                    CoroutineScope(Default).launch {
-                        Log.e("ERROR", "Server failed to provide a token")
-                        Toast.makeText(
-                            applicationContext,
-                            "Server connection lost!",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                }
-            },
-            {
-                Log.e("POST", it.toString())
-
-            }
-        )
     }
 
     /**

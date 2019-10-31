@@ -117,10 +117,12 @@ class UserFrontActivity : AppCompatActivity(), RegisterFragment.RegisterUserList
         println("Attempting to sign in the user")
         if (storeUserDetails(userDetails.username, userDetails.password, token)) {
             withContext(Main) {
+                println("calling nav to main loader")
                 navToMainLoader() // go to the main loader activity
             }
         }
         else {
+            println("error signing in the user")
             errorListener(InvalidLoginResponseModel(arrayOf("Error storing user details for auto login!")))
         }
     }

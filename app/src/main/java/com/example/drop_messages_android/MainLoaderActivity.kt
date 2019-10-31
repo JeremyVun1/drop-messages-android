@@ -3,11 +3,8 @@ package com.example.drop_messages_android
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
 import android.annotation.SuppressLint
-import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -16,10 +13,9 @@ import android.view.animation.OvershootInterpolator
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.drop_messages_android.api.*
-import com.google.android.gms.common.api.GoogleApiClient
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import com.tinder.scarlet.WebSocket
+import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.activity_loading.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Default
@@ -36,8 +32,9 @@ import kotlinx.coroutines.withContext
  */
 class MainLoaderActivity : AppCompatActivity() {
 
-    var waitingForPermissions = false
-    var userModel : UserModel? = null
+    private var waitingForPermissions = false
+    private var userModel : UserModel? = null
+    private var authResponseObserver: Disposable? = null
 
     private var locationHandler: LocationHandler? = null
 
@@ -131,6 +128,7 @@ class MainLoaderActivity : AppCompatActivity() {
 
                 // no user details, route to user front activity
                 userModel == null -> {
+                    println("ROUTING TO USER FRONT")
                     setLoadingTextAsync("Welcome first time user!")
                     delay(resources.getInteger(R.integer.STATUS_PAUSE_MS_LONG).toLong())
                     navToUserFront()
@@ -201,7 +199,7 @@ class MainLoaderActivity : AppCompatActivity() {
      */
     private fun onLocationReceived(location: Geolocation) {
         userModel!!.location = location
-        println("location gotten: $location")
+        println("location received: $location")
         CoroutineScope(IO).launch {
             setupConnection(location)
         }
@@ -229,28 +227,14 @@ class MainLoaderActivity : AppCompatActivity() {
 
                 // initialise our socket singleton
                 val socket = SocketManager
-                    .init(application).getWebSocket()
-
-                // send authentication token as soon as web socket is opened
-                socket!!.observeWebSocketEvent()
-                    .filter { it is WebSocket.Event.OnConnectionOpened<*> }
-                    .subscribe {
-                        socket.authenticate(
-                            AuthenticateSocket(
-                                DropRequest.AUTHENTICATE.value,
-                                userModel!!.token as String,
-                                location.lat.toFloat(),
-                                location.long.toFloat()
-                            )
-                        )
-                        println("<<[SND]attempt auth: ${userModel!!.token} @${location}")
-                    }
+                    .init(application, location, userModel!!)
+                    .getWebSocket()
 
                 // observe response from the token authentication
-                socket.observeAuthResponse()
+                authResponseObserver = socket!!.observeAuthResponse()
                     .subscribe {
                         println(">>[REC]: $it")
-                        if (it.category == "socket" && it.data == "open" && !SocketManager.authenticated) {
+                        if (it.category == "socket" && it.data == "open") {
                             SocketManager.authenticated = true
 
                             CoroutineScope(Default).launch {
@@ -266,8 +250,7 @@ class MainLoaderActivity : AppCompatActivity() {
 
                                 delay(resources.getInteger(R.integer.STATUS_PAUSE_MS_SHORT).toLong())
 
-                                if (applicationContext is MainLoaderActivity)
-                                    navToUserFront()
+                                navToUserFront()
                             }
                         }
                     }
@@ -293,9 +276,10 @@ class MainLoaderActivity : AppCompatActivity() {
      */
     private suspend fun navToUserFront() {
         withContext(Main) {
+            authResponseObserver?.dispose()
             val i = Intent(applicationContext, UserFrontActivity::class.java)
             startActivity(i)
-            finishActivity(0)
+            finish()
         }
     }
 
@@ -307,6 +291,7 @@ class MainLoaderActivity : AppCompatActivity() {
     }
 
     private fun navToDropMessagesActivity() {
+        authResponseObserver?.dispose()
         val i = Intent(applicationContext, DropMessagesActivity::class.java)
         i.putExtra("user", userModel)
         startActivity(i)

@@ -58,17 +58,17 @@
             style="@style/DarkHintText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="65dp"
+            android:layout_marginBottom="32dp"
             android:text="@string/pull_up_start_hint"
+            app:layout_constraintBottom_toTopOf="@+id/hint_action_scroll"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/img_logo" />
+            app:layout_constraintStart_toStartOf="parent" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/hint_action_scroll"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="50dp"
+            android:layout_marginBottom="60dp"
             android:backgroundTint="@color/colorPrimaryDark"
             android:clickable="false"
             android:elevation="60dp"
@@ -88,8 +88,8 @@
             style="@style/CardLabelText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="15dp"
-            android:text="@string/card_index_label"
+            android:layout_marginBottom="25dp"
+            android:text="@string/card_register_label"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.503"
