@@ -20,7 +20,7 @@ object Util {
      */
     val MAX_MESSAGE_LENGTH by lazy { 240 }
     val LOCATION_INTERVAL by lazy { 1000L }
-    val DEFAULT_MAP_ZOOM by lazy { 19f }
+    val DEFAULT_MAP_ZOOM by lazy { 17f }
 
     /**
      * Check whether there is internet or not
