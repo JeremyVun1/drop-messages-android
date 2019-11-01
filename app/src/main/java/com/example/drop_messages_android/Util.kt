@@ -18,8 +18,9 @@ object Util {
     /**
      * Constants
      */
-    val MAX_MESSAGE_LENGTH = 240
-    val LOCATION_INTERVAL = 1000L
+    val MAX_MESSAGE_LENGTH by lazy { 240 }
+    val LOCATION_INTERVAL by lazy { 1000L }
+    val DEFAULT_MAP_ZOOM by lazy { 19f }
 
     /**
      * Check whether there is internet or not
@@ -88,6 +89,7 @@ object Util {
  * Extension functions
  */
 fun Float.format(digits: Int) = "%.${digits}f".format(this)
+fun Double.format(digits: Int) = "%.${digits}f".format(this)
 
 fun Double.round(decimals: Int): Double {
     if (decimals < 0) return this

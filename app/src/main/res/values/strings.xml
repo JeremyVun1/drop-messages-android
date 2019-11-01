@@ -1,6 +1,6 @@
 <resources>
     <!-- General -->
-    <string name="app_name">drop-messages-android</string>
+    <string name="app_name">Drop Messages</string>
     <string name="app_name_formatted">Drop Messages</string>
     <string name="placeholder">Lorem Ipsum</string>
     <string name="placeholder_long">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Laoreet non sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Laoreet non</string>

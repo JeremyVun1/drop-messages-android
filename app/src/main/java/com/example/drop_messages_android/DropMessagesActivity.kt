@@ -449,7 +449,10 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
      */
     private fun loadToolbarLocationText() {
         CoroutineScope(Main).launch {
-            val toolbarLocText = "(${userModel?.location?.lat}, ${userModel?.location?.long})"
+            val lat = userModel?.location?.lat
+            val long = userModel?.location?.long
+
+            val toolbarLocText = "(${lat?.format(2)}, ${long?.format(2)})"
             tv_toolbar_geolocation.text = toolbarLocText
             tv_toolbar_geolocation.visibility = View.VISIBLE
         }

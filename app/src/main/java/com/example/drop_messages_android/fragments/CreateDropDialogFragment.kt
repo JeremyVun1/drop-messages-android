@@ -8,6 +8,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.core.widget.addTextChangedListener
 import com.example.drop_messages_android.R
+import com.example.drop_messages_android.Util
 import kotlinx.android.synthetic.main.card_create_drop.view.*
 
 
@@ -26,7 +27,7 @@ class CreateDropDialogFragment : AppCompatDialogFragment() {
         val msgText = view.et_message
 
         msgText.addTextChangedListener {
-            val charsLeft = "${resources.getInteger(R.integer.MAX_MESSAGE_LENGTH) - msgText.text.length} characters remaining"
+            val charsLeft = "${Util.MAX_MESSAGE_LENGTH - msgText.text.length} characters remaining"
             charCounter.text =  charsLeft
         }
 

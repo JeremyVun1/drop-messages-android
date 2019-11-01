@@ -20,9 +20,6 @@ import com.tinder.scarlet.ShutdownReason
 import com.tinder.scarlet.WebSocket
 import com.tinder.scarlet.lifecycle.LifecycleRegistry
 import io.reactivex.disposables.Disposable
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.launch
 
 
 /**

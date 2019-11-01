@@ -5,6 +5,7 @@ import android.animation.PropertyValuesHolder
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -94,14 +95,17 @@ class MainLoaderActivity : AppCompatActivity() {
      */
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray)
     {
-        if (grantResults.isEmpty()) {
-            CoroutineScope(Default).launch {
-                setLoadingTextAsync("App requires location permissions")
-                delay(resources.getInteger(R.integer.STATUS_PAUSE_MS_LONG).toLong())
+        var gotPermissions = true
+
+        for (result in grantResults) {
+            if (result != PackageManager.PERMISSION_GRANTED) {
+                gotPermissions = false
+                println("permission denied")
                 finish()
             }
         }
-        else {
+
+        if (gotPermissions) {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults)
             Util.waitingForPermissions = false
         }

@@ -2,7 +2,6 @@ package com.example.drop_messages_android.fragments
 
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
-import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,8 +10,6 @@ import android.view.animation.OvershootInterpolator
 import androidx.fragment.app.Fragment
 import com.example.drop_messages_android.R
 import kotlinx.android.synthetic.main.card_stack_empty.*
-import kotlinx.android.synthetic.main.card_test_small.view.*
-import java.util.*
 
 
 class StackEmptyFragment : Fragment() {

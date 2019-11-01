@@ -18,6 +18,7 @@ import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import com.tinder.scarlet.WebSocket
 import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.activity_drop_messages.*
 import kotlinx.android.synthetic.main.activity_drop_messages.toolbar
@@ -40,7 +41,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
     private var pickupFragment: DropMessageFragment? = null
     private var lastMarkerClicked: Int = -1
 
-    private var sockSubscriber: Disposable? = null
+    private lateinit var responseObserver: Disposable
+    private lateinit var initialStubsObserver: Disposable
     private val socket by lazy { SocketManager.getWebSocket() }
     private var requesting: Boolean = false
 
@@ -66,6 +68,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
     override fun onResume() {
         super.onResume()
         locationHandler?.connect()
+
         SocketManager.openSocket()
         setupSocketListeners()
     }
@@ -73,8 +76,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
     override fun onPause() {
         super.onPause()
         locationHandler?.disconnect()
+
         SocketManager.closeSocket()
-        sockSubscriber?.dispose()
+        if (::responseObserver.isInitialized)
+            responseObserver.dispose()
+        if (::initialStubsObserver.isInitialized)
+            initialStubsObserver.dispose()
     }
 
     /**
@@ -89,7 +96,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
             navToMainLoader()
         }
         else {
-            sockSubscriber = socket!!.observeSocketResponse()
+            initialStubsObserver = socket!!.observeWebSocketEvent()
+                .filter { it is WebSocket.Event.OnConnectionOpened<*> }
+                .subscribe {
+                    requesting = false
+                    requestMessageStubs()
+                }
+
+            responseObserver = socket!!.observeSocketResponse()
                 .subscribe {
                     val category = it.category
                     val data = it.data
@@ -98,7 +112,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
                         DropResponse.SOCKET -> handleSocketStatusResponses(data)
                         DropResponse.ERROR -> handleErrorResponses(data)
                         DropResponse.NOTIFICATION -> handleNotificationResponses(data)
-                        DropResponse.TOKEN -> handleTokenResponses(data)
                         DropResponse.GEOLOC -> handleGeolocResponse(data)
 
                         DropResponse.SINGLE -> handleGetSingleResponse(data)
@@ -114,25 +127,21 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
      */
     private fun handleGeolocResponse(data: String) {
         val response = gson.fromJson(data, GeolocationResponse::class.java)
-        println("GEOLOC RESPONSE $response")
 
         if (response.result) {
             val currLoc = userModel!!.location
 
-            //if (currLoc!!.lat.round(2) != response.lat.toDouble().round(2)) {
+            if (currLoc!!.lat.round(2) != response.lat.toDouble().round(2)) {
                 //our geolocation block has changed
                 userModel!!.location = Geolocation(response.lat.toDouble(), response.long.toDouble())
                 loadToolbarLocationText()
+            }
 
-                // request message stubs for new geolocation block
-                requestMessageStubs()
-            //}
-        }
-
-        requesting = false
+            // request message stubs for new geolocation block
+            requestMessageStubs()
+        } else requesting = false
     }
 
-    // TODO
     private fun handleGetSingleResponse(data: String) {
         val response = gson.fromJson(data, DropMessage::class.java)
 
@@ -149,9 +158,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
             } else pickupFragment!!.loadModel(response)
 
             requesting = false
+            openPickupContainer()
         }
-
-        openPickupContainer()
     }
 
     private fun openPickupContainer() {
@@ -196,7 +204,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
             }
 
             val focus = LatLng(location!!.lat, location.long)
-            mapFragment.moveCamera(CameraUpdateFactory.newLatLngZoom(focus, 20f))
+            mapFragment.moveCamera(CameraUpdateFactory.newLatLngZoom(focus, Util.DEFAULT_MAP_ZOOM))
         }
 
         requesting = false
@@ -208,15 +216,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
 
     private fun handleErrorResponses(data: String) {
         Log.e("ERROR", data)
-    }
-
-    private fun handleTokenResponses(data: String) {
-        Log.d("DEBUG", data)
-
-        // We need to get a new, fresh JWT token
-        CoroutineScope(Dispatchers.IO).launch {
-            fetchJsonWebToken()
-        }
     }
 
     private fun handleNotificationResponses(data: String) {
@@ -238,11 +237,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
     }
 
     private fun requestMessageStubs() {
-        println("requesting stubs called requesting: $requesting")
         if (!requesting) {
-            println("requesting stubs")
             socket!!.requestStubs(RequestStubs(DropRequest.GET_STUBS.value))
-            println("request stubs message sent")
             requesting = true
         }
     }
@@ -290,7 +286,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
      * Callback for google maps stuff
      */
     override fun onMapReady(map: GoogleMap) {
-        println("map is ready!")
         mapFragment = map
 
         // clicking a marker will request the full msg from the server
@@ -307,8 +302,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
             }
             true
         }
-
-        requestMessageStubs()
     }
 
     /**
@@ -321,72 +314,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
         val snack = Snackbar.make(root_container, text, Snackbar.LENGTH_LONG)
 
         snack.setAction("View it!") {
-            mapFragment.moveCamera(CameraUpdateFactory.newLatLngZoom(loc, 20f))
+            mapFragment.moveCamera(CameraUpdateFactory.newLatLngZoom(loc, Util.DEFAULT_MAP_ZOOM))
         }
-    }
-
-    /**
-     * For refreshing JWT when it expires
-     */
-    private suspend fun fetchJsonWebToken() {
-        val url = resources.getString(R.string.get_token_url)
-        val gson = Gson()
-        if (userModel == null) {
-            Log.e("ERROR", "Must be logged in to refresh token")
-            navToMainLoader()
-        }
-        val json = gson.toJson(
-            GetTokenModel(
-                userModel!!.username as String,
-                userModel!!.password as String
-            )
-        )
-
-        // ask mr postie to request a new token
-        Postie().sendPostRequest(applicationContext, url, json,
-            {
-                val response = gson.fromJson(it.toString(), JsonObject::class.java)
-                if (response.has("token")) {
-                    println("JWT response: ${response["token"]}")
-
-                    //strip any " chars pended on by the api server
-                    val token = response["token"].toString()
-                        .removePrefix("\"")
-                        .removeSuffix("\"")
-
-                    // save the new token in memory and in shared preferences
-                    userModel!!.token = token
-                    CoroutineScope(Dispatchers.IO).launch {
-                        val sp = getSharedPreferences("Login", MODE_PRIVATE)
-                        sp.edit().putString("token", token).commit()
-
-                        // get our geolocation to recreate a connection
-                        locationHandler!!.connect()
-                        locationHandler!!.getLastLocation(::onLocationReceived, ::onLocationError)
-                    }
-                } else {
-                    CoroutineScope(Default).launch {
-                        Log.e("ERROR", "Server failed to provide a token")
-                        Toast.makeText(
-                            applicationContext,
-                            "Server connection lost!",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                }
-            },
-            {
-                Log.e("POST", it.toString())
-
-            }
-        )
     }
 
     /**
      * Callbacks for Fused location provider
      */
     private fun onLocationReceived(location: Geolocation) {
-        println("location received")
         socket!!.changeGeolocation(
             ChangeGeolocation(
                 DropRequest.CHANGE_LOC.value,
@@ -394,7 +329,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
                 location.long.toFloat()
             )
         )
-        println("change geolocation sent")
 
         requesting = false
     }
@@ -436,7 +370,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
     }
 
     private fun changeLocation() {
-        println("change location called")
         locationHandler!!.connect()
         locationHandler!!.getLastLocation(::onLocationReceived, ::onLocationError)
     }
@@ -445,8 +378,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
      * Toolbar stuff
      */
     private fun loadToolbarLocationText() {
-        CoroutineScope(Dispatchers.Main).launch {
-            val toolbarLocText = "(${userModel?.location?.lat}, ${userModel?.location?.long})"
+        CoroutineScope(Main).launch {
+            val lat = userModel?.location?.lat
+            val long = userModel?.location?.long
+
+            val toolbarLocText = "(${lat?.format(2)}, ${long?.format(2)})"
             tv_toolbar_geolocation.text = toolbarLocText
             tv_toolbar_geolocation.visibility = View.VISIBLE
         }
