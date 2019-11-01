@@ -3,6 +3,7 @@ package com.example.drop_messages_android
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.util.SparseArray
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -11,13 +12,14 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
 import com.example.drop_messages_android.api.*
-import com.example.drop_messages_android.fragments.DropMessageFragment
+import com.example.drop_messages_android.fragments.DropMessageFragmentListener
+import com.example.drop_messages_android.fragments.MapDropMessageFragment
 import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
-import com.google.gson.JsonObject
 import com.tinder.scarlet.WebSocket
 import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.activity_drop_messages.*
@@ -31,14 +33,13 @@ import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
-    DropMessageFragment.DropMessageFragmentListener {
+class MapsActivity : AppCompatActivity(), OnMapReadyCallback, DropMessageFragmentListener {
 
     private val gson by lazy { Gson() }
 
     private lateinit var mapFragment: GoogleMap
     private var locationHandler: LocationHandler? = null
-    private var pickupFragment: DropMessageFragment? = null
+    private var pickupFragment: MapDropMessageFragment? = null
     private var lastMarkerClicked: Int = -1
 
     private lateinit var responseObserver: Disposable
@@ -47,6 +48,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
     private var requesting: Boolean = false
 
     private val userModel by lazy { intent.getParcelableExtra<UserModel>("user") }
+
+    // store our map markers
+    private val markers: SparseArray<Marker> by lazy {
+        SparseArray<Marker>()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -147,10 +153,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
 
         // add new fragment if none exists, else replace the one we already have
         // No need to recreate a fragment and replace it if one already exists
+        // make sure we are in the UI thread
         CoroutineScope(Main).launch {
             if (pickupFragment == null) {
-                val newFrag = createDropMessageFragment(response)
-                pickupFragment = newFrag as DropMessageFragment
+                val newFrag = createMapDropMessageFragment(response)
+                pickupFragment = newFrag as MapDropMessageFragment
 
                 supportFragmentManager.beginTransaction()
                     .add(R.id.map_pickup_container, newFrag, "map_pickup_fragment")
@@ -184,7 +191,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
 
         val response = gson.fromJson(data, Array<DropMessageStub>::class.java)
 
-        val location = userModel.location
+        val location = userModel!!.location
         if (location == null) {
             val errString = "Need to be on a geolocation block to use the map activity"
             Log.e("ERROR", errString)
@@ -194,6 +201,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
 
         CoroutineScope(Main).launch {
             mapFragment.clear()
+            markers.clear()
+
             for (stub in response) {
                 val marker = mapFragment.addMarker(
                     MarkerOptions()
@@ -201,6 +210,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
                         .title(stub.author)
                 )
                 marker.tag = stub.id
+                markers.put(stub.id.toInt(), marker)
             }
 
             val focus = LatLng(location!!.lat, location.long)
@@ -246,12 +256,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
     /**
      * Drop message fragment stuff
      */
-    private fun createDropMessageFragment(model: DropMessage): Fragment {
+    private fun createMapDropMessageFragment(model: DropMessage): Fragment {
         val b = Bundle()
         b.putParcelable("model", model)
         b.putBoolean("canDelete", model.author == userModel!!.username)
 
-        val result = DropMessageFragment()
+        val result = MapDropMessageFragment()
         result.arguments = b
 
         return result
@@ -277,8 +287,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
     override fun onDelete(id: Int?) {
         if (id != null) {
             socket!!.delete(Delete(DropRequest.DELETE.value, id.toString()))
-            supportFragmentManager.beginTransaction().remove(pickupFragment as Fragment)
-            pickupFragment = null
+
+            val marker = markers[id]
+            if (marker != null) {
+                marker.remove()
+                markers.remove(id)
+            }
+
+            closePickupContainer()
         }
     }
 

@@ -210,8 +210,8 @@ class MainLoaderActivity : AppCompatActivity() {
     }
     private fun onLocationError(ex: Exception) {
         CoroutineScope(IO).launch {
-            Log.e("ERROR", ex.message)
-            setLoadingTextAsync(ex.message as String)
+            Log.e("ERROR", ex.message ?: "error")
+            setLoadingTextAsync(ex.message ?: "error")
             delay(resources.getInteger(R.integer.STATUS_PAUSE_MS_LONG).toLong())
             finish()
         }

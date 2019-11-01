@@ -11,11 +11,10 @@ import com.example.drop_messages_android.R
 import com.example.drop_messages_android.VoteState
 import com.example.drop_messages_android.api.DropMessage
 import com.example.drop_messages_android.format
-import kotlinx.android.synthetic.main.card_create_drop.tv_author
-import kotlinx.android.synthetic.main.card_drop_fragment.*
+import kotlinx.android.synthetic.main.card_map_fragment.*
 
 
-class DropMessageFragment : Fragment() {
+class MapDropMessageFragment : Fragment() {
 
     var msgId: Int? = null
     private var voteState: VoteState = VoteState.NONE
@@ -28,7 +27,7 @@ class DropMessageFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val rootView = inflater.inflate(R.layout.card_drop_fragment, container, false) as ViewGroup
+        val rootView = inflater.inflate(R.layout.card_map_fragment, container, false) as ViewGroup
 
         return rootView
     }
@@ -62,7 +61,7 @@ class DropMessageFragment : Fragment() {
             i.action = Intent.ACTION_SEND
 
             val author = tv_author.text.toString()
-            val geoloc = tv_geoloc_label.text.toString()
+            val geoloc = "${tv_lat.text}, ${tv_long.text}"
             val msg = tv_drop_message.text.toString()
             val sharedMsg = "I picked up a message @$geoloc from $author - \"$msg\""
 
@@ -136,16 +135,13 @@ class DropMessageFragment : Fragment() {
 
         val lat = model.lat.format(2)
         val long = model.long.format(2)
-        val geoloc = "$lat, $long"
 
         tv_lat.text = "latitude: $lat"
         tv_long.text = "longtitude: $long"
         tv_author.text = model.author
         tv_date.text = model.date
         tv_drop_message.text = model.message
-        tv_seen_count.text = "seen ${(model.seen + 1)}"
+        tv_seen_count.text = "seen: ${(model.seen + 1)}"
         tv_vote_count.text = model.votes.toString()
-        tv_date_label.text = model.date
-        tv_geoloc_label.text = geoloc
     }
 }

@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center_horizontal"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:elevation="0dp"
+    android:stateListAnimator="@null">
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/shadow_small"
+        android:elevation="2dp"
+        android:stateListAnimator="@null"
+        app:srcCompat="@drawable/ic_map_card" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/content_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:elevation="2dp"
+        android:stateListAnimator="@null">
+
+        <TableLayout
+            android:id="@+id/message_container"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:gravity="center_horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TableRow
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tv_lat"
+                                style="@style/CardMessageSubText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:gravity="left"
+                                android:text="@string/placeholder" />
+
+                            <TextView
+                                android:id="@+id/tv_long"
+                                style="@style/CardMessageSubText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:gravity="left"
+                                android:text="@string/placeholder" />
+                        </LinearLayout>
+
+                    </TableRow>
+
+                    <TableRow
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:id="@+id/tv_author"
+                            style="@style/CardAuthorText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="0.8"
+                            android:text="@string/placeholder" />
+
+                        <TextView
+                            android:id="@+id/tv_date"
+                            style="@style/CardMessageSubText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/placeholder"
+                            android:textAlignment="viewEnd" />
+                    </TableRow>
+
+                    <ImageView
+                        android:id="@+id/header_line"
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginTop="4dp"
+                        android:layout_marginBottom="16dp"
+                        android:alpha="0.8"
+                        app:srcCompat="@drawable/grey_line_horizontal" />
+
+                    <TextView
+                        android:id="@+id/tv_drop_message"
+                        style="@style/CardMessageBodyText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/placeholder_long" />
+
+                    <TextView
+                        android:id="@+id/tv_seen_count"
+                        style="@style/CardMessageSubText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:text="@string/placeholder" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="4dp"
+                    android:layout_weight="0"
+                    android:orientation="vertical">
+
+                    <Button
+                        android:id="@+id/btn_share"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginStart="5dp"
+                        android:background="@drawable/ic_btn_share"
+                        android:elevation="2dp" />
+
+                    <Button
+                        android:id="@+id/btn_upvote"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:layout_gravity="center"
+                        android:layout_marginTop="25dp"
+                        android:background="@drawable/ic_vote_arrow_up"
+                        android:elevation="2dp" />
+
+                    <TextView
+                        android:id="@+id/tv_vote_count"
+                        style="@style/CardVotesText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:elevation="0dp"
+                        android:text="@string/placeholder_number" />
+
+                    <Button
+                        android:id="@+id/btn_downvote"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/ic_vote_arrow_down"
+                        android:elevation="2dp"
+                        tools:layout_editor_absoluteX="0dp"
+                        tools:layout_editor_absoluteY="39dp" />
+
+                    <Button
+                        android:id="@+id/btn_delete"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="25dp"
+                        android:background="@drawable/ic_delete"
+                        android:backgroundTint="@color/colorPrimaryDark"
+                        android:elevation="2dp" />
+
+
+                </LinearLayout>
+
+            </TableRow>
+
+        </TableLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</FrameLayout>
