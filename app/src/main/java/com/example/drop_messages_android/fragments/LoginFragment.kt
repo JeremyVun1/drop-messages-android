@@ -94,12 +94,7 @@ class LoginFragment : Fragment() {
     // error listener for invalid sign in e.g. invalid username/password
     // callback for userfront activity
     fun errorListener(response: InvalidLoginResponseModel) {
-        val sb = StringBuilder()
-        for (error in response.non_field_errors) {
-            sb.append("${error}\n")
-        }
-
-        tv_signup_error.text = sb.toString()
+        tv_signup_error.text = "Invalid username/password"
 
         // reset UI back
         stopProgressBar()
