@@ -3,17 +3,14 @@ package com.example.drop_messages_android.api
 import android.Manifest.permission
 import android.content.Context
 import android.content.pm.PackageManager
-import android.location.Location
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import com.example.drop_messages_android.Util
 import com.google.android.gms.common.ConnectionResult
-import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.*
-import com.google.android.material.snackbar.Snackbar
 
 
 class LocationHandler(val context: Context) : GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationCallback() {
@@ -25,10 +22,13 @@ class LocationHandler(val context: Context) : GoogleApiClient.ConnectionCallback
 
     private var flpClient: FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context)
 
-    private var request: LocationRequest = LocationRequest.create()
-        .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-        .setInterval(Util.LOCATION_INTERVAL)
-        .setFastestInterval(Util.LOCATION_INTERVAL)
+    private var request: LocationRequest = LocationRequest.create().apply {
+        interval = Util.INTERVAL
+        fastestInterval = Util.FASTEST_INTERVAL
+        priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+    }
+
+    private var mListener: LocationUpdateListener? = null
 
     init {
         apiClient.connect()
@@ -63,7 +63,8 @@ class LocationHandler(val context: Context) : GoogleApiClient.ConnectionCallback
         else errorListener(Exception("App requires location permissions"))
     }
 
-    fun subscribe(listener: (loc: Geolocation) -> Unit) {
+    fun subscribe(listener: LocationUpdateListener) {
+        mListener = listener
         flpClient.requestLocationUpdates(request, this, Looper.getMainLooper())
     }
 
@@ -93,12 +94,18 @@ class LocationHandler(val context: Context) : GoogleApiClient.ConnectionCallback
      */
     override fun onLocationResult(result: LocationResult?) {
         result ?: return
-        for (loc in result.locations) {
-            println("FLP SUBSCRIPTION EVENT: $loc")
-        }
+
+        println("LOCATION SUBSCRIPTION EVENT")
+        val lastLocation = result.lastLocation
+        val geoloc = Geolocation(lastLocation.latitude, lastLocation.longitude)
+        mListener?.onLocationReceived(geoloc)
     }
 
     override fun onLocationAvailability(result: LocationAvailability?) {
         super.onLocationAvailability(result)
+    }
+
+    interface LocationUpdateListener {
+        fun onLocationReceived(newLoc: Geolocation)
     }
 }

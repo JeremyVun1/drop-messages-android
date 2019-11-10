@@ -1,6 +1,7 @@
 package com.example.drop_messages_android.api
 
 import android.os.Parcelable
+import com.google.firebase.Timestamp
 import kotlinx.android.parcel.Parcelize
 import java.util.*
 
@@ -30,13 +31,7 @@ data class Geolocation(var lat: Double, var long: Double) : Parcelable {
 }
 
 @Parcelize
-data class DropMessage(val id: Int, val lat: Float, val long: Float, val message: String, val date: String, val votes: Int, val seen: Int, val author: String) : Parcelable
-
-data class PostDataResponse(val echo: DropMessage, val result: Boolean, val meta: String)
-
-data class GeolocationResponse(val result: Boolean, val lat: Float, val long: Float)
-
-data class DropMessageStub(val id: String, val author: String, val lat: Float, val long: Float)
+data class DropMessage(val id: String, val lat: Double, val long: Double, val lat_block: Double, val long_block: Double, val message: String, val date: Timestamp, val votes: Int, val seen: Int, val author: String) : Parcelable
 
 // web socket
 // send models

@@ -37,7 +37,7 @@ class VerticalPageAdapter(private var fragments: MutableList<Fragment>, fm: Frag
         notifyDataSetChanged()
     }
 
-    fun removeFragment(id: Int) : Int? {
+    fun removeFragment(id: String) : Int? {
         for (i in fragments.indices) {
             val f = fragments[i]
             if (f is DropMessageFragment && f.msgId == id) {

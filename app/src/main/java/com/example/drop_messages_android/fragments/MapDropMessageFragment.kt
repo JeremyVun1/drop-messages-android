@@ -16,7 +16,7 @@ import kotlinx.android.synthetic.main.card_map_fragment.*
 
 class MapDropMessageFragment : Fragment() {
 
-    var msgId: Int? = null
+    var msgId: String? = null
     private var voteState: VoteState = VoteState.NONE
     private var upvoted: Boolean = false
 
@@ -139,7 +139,7 @@ class MapDropMessageFragment : Fragment() {
         tv_lat.text = "latitude: $lat"
         tv_long.text = "longtitude: $long"
         tv_author.text = model.author
-        tv_date.text = model.date
+        tv_date.text = model.date.toDate().toString()
         tv_drop_message.text = model.message
         tv_seen_count.text = "seen: ${(model.seen + 1)}"
         tv_vote_count.text = model.votes.toString()

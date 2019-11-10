@@ -1,7 +1,6 @@
 package com.example.drop_messages_android
 
 import android.content.Intent
-import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -14,6 +13,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.viewpager.widget.ViewPager
 import com.example.drop_messages_android.api.*
+import com.example.drop_messages_android.api.LocationHandler.LocationUpdateListener
 import com.example.drop_messages_android.fragments.CreateDropDialogFragment
 import com.example.drop_messages_android.fragments.DropMessageFragment
 import com.example.drop_messages_android.fragments.StackEmptyFragment
@@ -21,8 +21,11 @@ import com.example.drop_messages_android.viewpager.VerticalPageAdapter
 import com.example.drop_messages_android.fragments.CreateDropDialogFragment.CreateDropListener
 import com.example.drop_messages_android.fragments.DropMessageFragmentListener
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.firestore.*
 import com.google.gson.Gson
-import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.activity_drop_messages.*
 import kotlinx.android.synthetic.main.layout_toolbar.*
 import kotlinx.coroutines.CoroutineScope
@@ -30,24 +33,29 @@ import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.*
 
 
 /**
  * Main activity where user can make api requests through a web socket to create and retrieve data
  */
-class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessageFragmentListener {
+class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessageFragmentListener, LocationUpdateListener {
+
+    private var firebaseAuth: FirebaseAuth? = null
+    private var firebaseDb: FirebaseFirestore? = null
+    private var user: FirebaseUser? = null
 
     private var locationHandler: LocationHandler? = null
+    private var location: Geolocation? = null
+
     private val gson by lazy { Gson() }
 
-    private var socket: DropMessageService? = null
-    private var socketSubscriber: Disposable? = null
-    private var userModel: UserModel? = null
-
     private var lastRequest: DropRequest? = null
-    private var pageNumber: Int = 1
+    private var lastVisible: DocumentSnapshot? = null
     private var requesting: Boolean = false
     private var lastPageScrolled: Boolean = false
+
+    private var seenDrops = mutableMapOf<String, Boolean>()
 
     // page viewer references
     private var pageAdapter: VerticalPageAdapter? = null
@@ -57,10 +65,15 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_drop_messages)
 
-        locationHandler = LocationHandler(applicationContext)
+        firebaseAuth = FirebaseAuth.getInstance()
+        user = firebaseAuth!!.currentUser
+        if (user == null) navToMainLoader()
 
-        userModel = intent.getParcelableExtra("user")
-        pager.offscreenPageLimit = 10
+        firebaseDb = FirebaseFirestore.getInstance()
+
+        locationHandler = LocationHandler(applicationContext)
+        location = intent.getParcelableExtra("location")
+        locationHandler!!.getLastLocation(::onLocationReceived, ::onLocationError)
 
         setSupportActionBar(toolbar as Toolbar)
         loadToolbarLocationText()
@@ -77,54 +90,171 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
     override fun onResume() {
         super.onResume()
         locationHandler!!.connect()
-
-        SocketManager.openSocket()
-        setupSocketListeners()
     }
 
     override fun onPause() {
         super.onPause()
         locationHandler!!.disconnect()
-
-        SocketManager.closeSocket()
-        socketSubscriber?.dispose()
     }
 
     /**
      * setup button click listeners
      */
     private fun setupButtonHandlers() {
-        btn_get_top.setOnClickListener { requestDrops(DropRequest.GET_TOP) }
-        btn_get_latest.setOnClickListener { requestDrops(DropRequest.GET_NEW) }
-        btn_get_random.setOnClickListener { requestDrops(DropRequest.GET_RANDOM) }
-        btn_my_drops.setOnClickListener { requestDrops(DropRequest.GET_MINE) }
-
-        btn_create_drop.setOnClickListener {
-            val dialog = CreateDropDialogFragment()
-            val b = Bundle()
-            b.putString("author", userModel!!.username)
-            dialog.arguments = b
-
-            dialog.show(supportFragmentManager, "Create Drop Message")
-        }
-
-        btn_map.setOnClickListener {
-            navToMap()
-        }
+        btn_get_top.setOnClickListener { requestTop() }
+        btn_get_latest.setOnClickListener { requestLatest() }
+        btn_get_random.setOnClickListener { requestRandom() }
+        btn_my_drops.setOnClickListener { requestMine() }
+        btn_map.setOnClickListener { navToMap() }
+        btn_create_drop.setOnClickListener { createDropDialog() }
     }
 
-    private fun requestDrops(requestType: DropRequest) {
+    /**
+     * Document queries
+     */
+    private fun requestTop() {
         if (!Util.hasInternet(applicationContext))
             navToNoInternet()
 
-        if (lastRequest != requestType && !requesting) {
-            pageNumber = 1
-            requesting = true
-            lastRequest = requestType
-            socket!!.requestDrops(RequestDrops(requestType.value, pageNumber))
+        if (requesting) return
 
-            setLoadingAnimation()
-        }
+        val query = firebaseDb!!.collection("messages")
+            .whereEqualTo("lat_block", location!!.lat.round(2))
+            .whereEqualTo("long_block", location!!.long.round(2))
+            .whereGreaterThan("votes", -6)
+            .orderBy("votes", Query.Direction.DESCENDING)
+
+        if (lastRequest == DropRequest.GET_TOP && lastVisible != null)
+            query.startAfter(lastVisible!!)
+        else lastRequest = DropRequest.GET_TOP
+
+        println("getting at ${location!!.lat.round(2)} - ${location!!.long.round(2)}")
+
+        query.limit(Util.PAGE_SIZE.toLong())
+            .get()
+            .addOnSuccessListener {
+                if (!it.isEmpty)
+                    lastVisible = it.documents[it.size() - 1]
+
+                loadDocumentsIntoPageViewer(it)
+                requesting = false
+            }
+            .addOnFailureListener {
+                Toast.makeText(applicationContext, it.toString(), Toast.LENGTH_SHORT).show()
+                Log.e("MESSAGE", it.toString())
+                requesting = false
+            }
+        requesting = true
+    }
+
+    private fun requestLatest() {
+        if (!Util.hasInternet(applicationContext))
+            navToNoInternet()
+
+        if (requesting) return
+
+        val query = firebaseDb!!.collection("messages")
+            .whereEqualTo("lat_block", location!!.lat.round(2))
+            .whereEqualTo("long_block", location!!.long.round(2))
+            .whereGreaterThan("votes", -6)
+            .orderBy("votes", Query.Direction.DESCENDING)
+            .orderBy("date", Query.Direction.DESCENDING)
+
+        if (lastRequest == DropRequest.GET_TOP && lastVisible != null)
+            query.startAfter(lastVisible!!)
+        else lastRequest = DropRequest.GET_TOP
+
+        query.limit(Util.PAGE_SIZE.toLong())
+            .get()
+            .addOnSuccessListener {
+                if (!it.isEmpty)
+                    lastVisible = it.documents[it.size() - 1]
+                loadDocumentsIntoPageViewer(it)
+                requesting = false
+            }
+            .addOnFailureListener {
+                Toast.makeText(applicationContext, it.toString(), Toast.LENGTH_SHORT).show()
+                Log.e("MESSAGE", it.toString())
+                requesting = false
+            }
+        requesting = true
+    }
+
+    private fun requestRandom() {
+        if (!Util.hasInternet(applicationContext))
+            navToNoInternet()
+
+        if (requesting) return
+
+        val query = firebaseDb!!.collection("messages")
+            .whereEqualTo("lat_block", location!!.lat.round(2))
+            .whereEqualTo("long_block", location!!.long.round(2))
+            .whereGreaterThan("votes", -6)
+
+        if (lastRequest == DropRequest.GET_RANDOM && lastVisible != null)
+            query.startAfter(lastVisible!!)
+        else lastRequest = DropRequest.GET_RANDOM
+
+        query.limit(Util.PAGE_SIZE.toLong())
+            .get()
+            .addOnSuccessListener {
+                if (!it.isEmpty)
+                    lastVisible = it.documents[it.size() - 1]
+                loadDocumentsIntoPageViewer(it)
+                requesting = false
+            }
+            .addOnFailureListener {
+                Toast.makeText(applicationContext, it.toString(), Toast.LENGTH_SHORT).show()
+                Log.e("MESSAGE", it.toString())
+                requesting = false
+            }
+        requesting = true
+    }
+
+    private fun requestMine() {
+        if (!Util.hasInternet(applicationContext))
+            navToNoInternet()
+
+        if (requesting) return
+
+        val query = firebaseDb!!.collection("messages")
+            .whereEqualTo("lat_block", location!!.lat.round(2))
+            .whereEqualTo("long_block", location!!.long.round(2))
+            .whereEqualTo("author", user!!.displayName)
+            .whereGreaterThan("votes", -6)
+            .orderBy("votes", Query.Direction.ASCENDING)
+            .orderBy("date", Query.Direction.DESCENDING)
+
+        if (lastRequest == DropRequest.GET_MINE && lastVisible != null)
+            query.startAfter(lastVisible!!)
+        else lastRequest = DropRequest.GET_MINE
+
+        query.limit(Util.PAGE_SIZE.toLong())
+            .get()
+            .addOnSuccessListener {
+                if (!it.isEmpty)
+                    lastVisible = it.documents[it.size()-1]
+                loadDocumentsIntoPageViewer(it)
+                requesting = false
+            }
+            .addOnFailureListener {
+                Toast.makeText(applicationContext, it.toString(), Toast.LENGTH_SHORT).show()
+                Log.e("MESSAGE", it.toString())
+                requesting = false
+            }
+        requesting = true
+    }
+
+    /**
+     * Dialog popup for creating a new drop message
+     */
+    private fun createDropDialog() {
+        val dialog = CreateDropDialogFragment()
+        val b = Bundle()
+        b.putString("author", user?.displayName)
+        dialog.arguments = b
+
+        dialog.show(supportFragmentManager, "Create Drop Message")
     }
 
     /**
@@ -150,7 +280,14 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
                     // get more pages
                     if (lastRequest == null)
                         lastRequest = DropRequest.GET_MINE
-                    socket!!.requestDrops(RequestDrops(lastRequest!!.value, pageNumber))
+                    else {
+                        when(lastRequest) {
+                            DropRequest.GET_NEW -> requestLatest()
+                            DropRequest.GET_TOP -> requestTop()
+                            DropRequest.GET_MINE -> requestMine()
+                            DropRequest.GET_RANDOM -> requestRandom()
+                        }
+                    }
                 }
             }
 
@@ -161,138 +298,11 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
         })
     }
 
-    /**
-     * handling different socket REQUEST & RESPONSES messages
-     */
-    private fun setupSocketListeners() {
-        if (!Util.hasInternet(applicationContext))
-            navToNoInternet()
-
-        socket = SocketManager.getWebSocket()
-        if (socket == null) {
-            Log.e("ERROR", "Cannot use a null socket")
-            navToMainLoader()
-        }
-        else {
-            // Socket response routing
-            socketSubscriber = socket!!.observeSocketResponse()
-                .subscribe {
-                    val category = it.category
-                    val data = it.data
-
-                    when (DropResponse.getEnum(category)) {
-                        DropResponse.SOCKET -> handleSocketStatusResponses(data)
-                        DropResponse.POST -> handlePostResponses(data)
-                        DropResponse.VOTE -> handleVoteResponses(data)
-                        DropResponse.RETRIEVE -> handleRetrieveResponses(data)
-                        DropResponse.ERROR -> handleErrorResponses(data)
-                        DropResponse.NOTIFICATION -> handleNotificationResponses(data)
-                        DropResponse.GEOLOC -> handleGeolocResponse(data)
-                        DropResponse.UNKNOWN -> Log.e("ERROR", "Unknown server response category")
-                    }
-                }
-        }
-    }
-
-    private fun handlePostResponses(data: String) {
-        val response = gson.fromJson(data, PostDataResponse::class.java)
-        println("HANDLING POST RESPONSE:")
-        println(response)
-
-        if (response.result) {
-            try {
-                val geolocStr = "(${response.echo.lat.format(2)}, ${response.echo.long.format(2)})"
-                showSnackBarWithJump("Message dropped at $geolocStr", response)
-            } catch (ex: Exception) {
-                Log.e("ERROR", Log.getStackTraceString(ex))
-            }
-        }
-        else showSnackBar("Drop failed: ${response.meta}!")
-    }
-
-    private fun handleRetrieveResponses(data: String) {
-        CoroutineScope(Main).launch {
-            val response = gson.fromJson(data, Array<DropMessage>::class.java)
-
-            if (response.isNotEmpty()) {
-                val list = arrayListOf<Fragment>()
-                for (message in response)
-                    list.add(createDropMessageFragment(message))
-
-                fragments = list
-                loadFragmentsIntoPageViewer(list)
-
-                pageNumber += 1
-            }
-            else {
-                pageNumber = 1
-                lastRequest = null
-                lastPageScrolled = false
-                showSnackBar("No more drop messages found!")
-            }
-
-            requesting = false
-        }
-    }
-
-    private fun handleGeolocResponse(data: String) {
-        val response = gson.fromJson(data, GeolocationResponse::class.java)
-        println("RESPONSE $response")
-
-        if (response.result) {
-            val currLoc = userModel!!.location
-
-            if (currLoc!!.lat.round(2) != response.lat.toDouble().round(2)) {
-                // our new geolocation block is different, so update
-                userModel!!.location = Geolocation(response.lat.toDouble(), response.long.toDouble())
-                SocketManager.setNewUserLocation(userModel!!)
-                loadToolbarLocationText()
-            }
-        }
-
-        requesting = false
-    }
-
-    private fun handleNotificationResponses(data: String) {
-        val response = gson.fromJson(data, DropMessage::class.java)
-
-        val fragment = createDropMessageFragment(response)
-
-        addFragmentToPageViewer(fragment, "You picked up a new message!")
-    }
-
-    private fun addFragmentToPageViewer(fragment: Fragment, text: String) {
-        CoroutineScope(Main).launch {
-            if (fragments == null) {
-                val fragmentList = mutableListOf(fragment)
-                fragments = fragmentList
-                loadFragmentsIntoPageViewer(fragmentList)
-            }
-            else {
-                pageAdapter!!.addFragment(fragment)
-                println("SIZE: ${fragments!!.size}")
-                showSnackBar(text)
-            }
-        }
-    }
-
-    private fun removeFragmentFromPageViewer(msgId: Int) {
+    private fun removeFragmentFromPageViewer(msgId: String) {
         CoroutineScope(Main).launch {
             pageAdapter!!.removeFragment(msgId)
             showSnackBar("Drop Message deleted!")
         }
-    }
-
-    private fun handleSocketStatusResponses(data: String) {
-        Log.d("DEBUG", data)
-    }
-
-    private fun handleVoteResponses(data: String) {
-        Log.d("VOTE", data)
-    }
-
-    private fun handleErrorResponses(data: String) {
-        Log.e("ERROR", data)
     }
 
     /**
@@ -301,12 +311,58 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
     private fun createDropMessageFragment(model: DropMessage): Fragment {
         val b = Bundle()
         b.putParcelable("model", model)
-        b.putBoolean("canDelete", model.author == userModel!!.username)
+        b.putBoolean("canDelete", model.author == user!!.displayName)
 
         val result = DropMessageFragment()
         result.arguments = b
 
         return result
+    }
+
+    private fun loadDocumentsIntoPageViewer(docs: QuerySnapshot) {
+        if (docs.isEmpty) {
+            showSnackBar("No more drop messages")
+            return
+        }
+
+        val fragments = mutableListOf<Fragment>()
+        println("documents gotten: ${docs.size()}")
+        updateSeen(docs)
+
+        for (doc in docs) {
+            val msgId = doc.data["id"] as String
+            seenDrops[msgId] = true
+
+            val model = DropMessage(
+                id=msgId,
+                lat=doc.data["lat"] as Double,
+                long=doc.data["long"] as Double,
+                lat_block=doc.data["lat_block"] as Double,
+                long_block=doc.data["long_block"] as Double,
+                message=doc.data["message"] as String,
+                date=doc.data["date"] as Timestamp,
+                seen=(doc.data["seen"] as Long).toInt(),
+                votes=(doc.data["votes"] as Long).toInt(),
+                author=doc.data["author"] as String
+            )
+            fragments.add(createDropMessageFragment(model))
+        }
+
+        loadFragmentsIntoPageViewer(fragments)
+    }
+
+    private fun updateSeen(docs: QuerySnapshot) {
+        val toUpdate = mutableListOf<QueryDocumentSnapshot>()
+        for (doc in docs) {
+            if (!seenDrops.containsKey(doc.data["id"] as String))
+                toUpdate.add(doc)
+        }
+
+        firebaseDb!!.runBatch { batch ->
+            for (item in toUpdate) {
+                batch.update(item.reference, "seen", FieldValue.increment(1))
+            }
+        }
     }
 
     private fun loadFragmentsIntoPageViewer(fragmentList: MutableList<Fragment>) {
@@ -339,43 +395,69 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
     // listener for create drop message dialog fragment
     override fun onCreateDrop(msg: String) {
         println("creating msg: $msg")
-        socket!!.createDrop(CreateDrop(DropRequest.CREATE_DROP.value, msg))
+
+        val reference = firebaseDb!!.collection("messages").document()
+
+        val message = DropMessage(
+            id = reference.id,
+            author=user!!.displayName as String,
+            message = msg,
+            date = Timestamp(Date()),
+            lat = location!!.lat,
+            long = location!!.long,
+            lat_block = location!!.lat.round(2),
+            long_block = location!!.long.round(2),
+            votes = 1,
+            seen = 0
+        )
+
+        reference.set(message)
+            .addOnSuccessListener {
+                showSnackBarWithJump("Message dropped at (${message.lat_block.format(2)}, ${message.long_block.format(2)})", message)
+            }
+            .addOnFailureListener {
+                showSnackBar("Failed to create message")
+                Log.e("MESSAGE", "Failed to create message")
+            }
     }
 
-    override fun onUpvote(id: Int?) {
+    override fun onUpvote(id: String?) {
         if (id != null) {
-            println("upvoting msg: $id")
-            socket!!.upvote(Upvote(DropRequest.UPVOTE.value, id.toString()))
+            firebaseDb!!.collection("messages").document(id)
+                .update("votes", FieldValue.increment(1))
         }
     }
 
-    override fun onDownvote(id: Int?) {
+    override fun onDownvote(id: String?) {
         if (id != null) {
-            println("downvoting msg: $id")
-            socket!!.downvote(Downvote(DropRequest.DOWNVOTE.value, id.toString()))
+            firebaseDb!!.collection("messages").document(id)
+                .update("votes", FieldValue.increment(-1))
         }
     }
 
-    override fun onDelete(id: Int?) {
+    override fun onDelete(id: String?) {
         if (id != null) {
-            socket!!.delete(Delete(DropRequest.DELETE.value, id.toString()))
-            removeFragmentFromPageViewer(id)
+            firebaseDb!!.collection("messages").document(id).delete()
+                .addOnSuccessListener {
+                    removeFragmentFromPageViewer(id)
+                    showSnackBar("Message deleted!")
+                }
         }
     }
 
     /**
      * Callbacks for Fused location provider
      */
-    private fun onLocationReceived(location: Geolocation) {
-        socket!!.changeGeolocation(
-            ChangeGeolocation(
-                DropRequest.CHANGE_LOC.value,
-                location.lat.toFloat(),
-                location.long.toFloat()
-            )
-        )
+    override fun onLocationReceived(newLoc: Geolocation) {
+        val currLoc = location
 
-        requesting = true
+        // check if our geolocation block changed
+        if (currLoc == null || (currLoc.lat.format(2) != newLoc.lat.format(2) && currLoc.long.format(2) != newLoc.long.format(2))) {
+            showSnackBar("Geolocation block changed to: ${newLoc.formattedString()}")
+            loadToolbarLocationText()
+        }
+
+        location = newLoc
     }
 
     private fun onLocationError(ex: Exception) {
@@ -389,14 +471,7 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
      */
     private fun navToMap() {
         val i = Intent(applicationContext, MapsActivity::class.java)
-        i.putExtra("user", userModel)
         startActivity(i)
-    }
-
-    private suspend fun navToMainLoaderAsync() {
-        withContext(Main) {
-            navToMainLoader()
-        }
     }
 
     private fun navToMainLoader() {
@@ -423,14 +498,13 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
         snack.setActionTextColor(actionColor).setTextColor(textColor).show()
     }
 
-    private fun showSnackBarWithJump(text: String, response: PostDataResponse) {
-
+    private fun showSnackBarWithJump(text: String, message: DropMessage) {
         val snack = Snackbar.make(root_container, text, Snackbar.LENGTH_LONG)
+
         snack.setAction("View it!") {
-            val fragment = createDropMessageFragment(response.echo)
+            val fragment = createDropMessageFragment(message)
             val list = mutableListOf(fragment)
             fragments = list
-            pageNumber = 1
             lastRequest = null
             loadFragmentsIntoPageViewer(list)
         }
@@ -446,8 +520,8 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
      */
     private fun loadToolbarLocationText() {
         CoroutineScope(Main).launch {
-            val lat = userModel?.location?.lat
-            val long = userModel?.location?.long
+            val lat = location?.lat
+            val long = location?.long
 
             val toolbarLocText = "(${lat?.format(2)}, ${long?.format(2)})"
             tv_toolbar_geolocation.text = toolbarLocText
@@ -460,9 +534,12 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
             // clear user details from shared preferences
             val sp = getSharedPreferences("Login", MODE_PRIVATE)
             sp.edit().clear().commit()
+            firebaseAuth!!.signOut()
 
             // nav to user front
-            navToMainLoaderAsync()
+            withContext(Main) {
+                navToMainLoader()
+            }
         }
     }
 
@@ -486,12 +563,5 @@ class DropMessagesActivity : AppCompatActivity(), CreateDropListener, DropMessag
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.global_menu, menu)
         return true
-    }
-
-    /**
-     * Animations
-     */
-    private fun setLoadingAnimation() {
-        println("animate something")
     }
 }

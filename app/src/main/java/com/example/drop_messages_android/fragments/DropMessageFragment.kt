@@ -13,11 +13,12 @@ import com.example.drop_messages_android.api.DropMessage
 import com.example.drop_messages_android.format
 import kotlinx.android.synthetic.main.card_create_drop.tv_author
 import kotlinx.android.synthetic.main.card_drop_fragment.*
+import java.text.SimpleDateFormat
 
 
 class DropMessageFragment : Fragment() {
 
-    var msgId: Int? = null
+    var msgId: String? = null
     private var voteState: VoteState = VoteState.NONE
     private var upvoted: Boolean = false
 
@@ -141,11 +142,11 @@ class DropMessageFragment : Fragment() {
         tv_lat.text = "latitude: $lat"
         tv_long.text = "longtitude: $long"
         tv_author.text = model.author
-        tv_date.text = model.date
+        tv_date.text = model.date.toDate().toString()
         tv_drop_message.text = model.message
         tv_seen_count.text = "seen ${(model.seen + 1)}"
         tv_vote_count.text = model.votes.toString()
-        tv_date_label.text = model.date
+        //tv_date_label.text = model.date.toDate().toString()
         tv_geoloc_label.text = geoloc
     }
 }

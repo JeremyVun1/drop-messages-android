@@ -15,6 +15,9 @@
     <string name="sign_in_button">SIGN IN</string>
     <string name="sign_in_option_label">ALREADY HAVE AN ACCOUNT?</string>
     <string name="sign_up_option_label">DON\'T HAVE AN ACCOUNT?</string>
+    <string name="forgot_pw_label">Forgot password?</string>
+    <string name="forgot_pw_button">Recover</string>
+    <string name="send_password_reset">SEND RESET EMAIL</string>
 
     <!-- Action hints -->
     <string name="pull_up_start_hint">Pull up to start!</string>

@@ -19,8 +19,10 @@ object Util {
      * Constants
      */
     val MAX_MESSAGE_LENGTH by lazy { 240 }
-    val LOCATION_INTERVAL by lazy { 1000L }
+    val INTERVAL by lazy { 30000L }
+    val FASTEST_INTERVAL by lazy { 20000L }
     val DEFAULT_MAP_ZOOM by lazy { 17f }
+    val PAGE_SIZE by lazy { 10 }
 
     /**
      * Check whether there is internet or not

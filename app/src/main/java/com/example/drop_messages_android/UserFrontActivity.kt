@@ -3,28 +3,26 @@ package com.example.drop_messages_android
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.example.drop_messages_android.fragments.IndexFragment
 import com.example.drop_messages_android.fragments.LoginFragment
 import com.example.drop_messages_android.fragments.RegisterFragment
 import com.example.drop_messages_android.viewpager.VerticalPageAdapter
-import com.google.gson.Gson
-import com.google.gson.JsonObject
 import kotlinx.android.synthetic.main.activity_user_front.*
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import android.content.Intent
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import com.example.drop_messages_android.api.*
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.activity_no_internet.*
 import kotlinx.android.synthetic.main.activity_user_front.toolbar
 import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.withContext
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.UserProfileChangeRequest
+import com.google.firebase.firestore.FirebaseFirestore
 
 
 class UserFrontActivity : AppCompatActivity(), RegisterFragment.RegisterUserListener, LoginFragment.LoginUserListener {
@@ -32,14 +30,16 @@ class UserFrontActivity : AppCompatActivity(), RegisterFragment.RegisterUserList
     private var regFrag : RegisterFragment? = null
     private var loginFrag : LoginFragment?= null
 
+    private var firebaseAuth: FirebaseAuth? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_front)
-        overridePendingTransition(0, 0)
 
         setSupportActionBar(toolbar as Toolbar)
 
         initialiseUI()
+        firebaseAuth = FirebaseAuth.getInstance()
     }
 
     private fun initialiseUI() {
@@ -72,110 +72,97 @@ class UserFrontActivity : AppCompatActivity(), RegisterFragment.RegisterUserList
         finish()
     }
 
-    /**
-     * Event handler when user presses sign in button on login fragment
-     */
-    override fun onSignIn(bundle: Bundle, errorListener: (err: InvalidLoginResponseModel) -> Unit) {
-        CoroutineScope(IO).launch {
-            val model = GetTokenModel(bundle.getString("username") ?: "",
-                bundle.getString("password") ?: "")
+    private fun navToForgotPassword() {
+        val i = Intent(applicationContext, ForgotPasswordActivity::class.java)
+        startActivity(i)
+    }
 
-            // auth the user by getting a JWT token from remote server
-            val url = resources.getString(R.string.get_token_url)
-            val gson = Gson()
-            val json = gson.toJson(model)
-            println("logging in user with json: $json")
-
-            // make the post request with inline listeners
-            Postie().sendPostRequest(applicationContext, url, json,
-                {
-                    val response = gson.fromJson(it.toString(), JsonObject::class.java)
-                    if (response.has("token")) {
-                        showSnackBar("Successfully authenticated as ${model.username}!")
-
-                        // handle the sign in and routing async
-                        CoroutineScope(Default).launch {
-                            signInUser(model, response["token"].toString(), errorListener)
-                        }
-                    }
-                    else if (response.has("non_field_errors"))
-                        errorListener(gson.fromJson(response, InvalidLoginResponseModel::class.java))
-                },
-                {
-                    Log.e("POST", it.toString())
-                    errorListener(InvalidLoginResponseModel(arrayOf("Error $it")))
-                }
-            )
-        }
+    override fun onForgotPassword() {
+        navToForgotPassword()
     }
 
     /**
-     * Store un/pw securely for quick login when user opens app again
-     * Then route user back to MainLoaderActivity for web socket connection creation etc.
+     * Event handler when user presses sign in button on login fragment
      */
-    private suspend fun signInUser(userDetails: GetTokenModel, token: String, errorListener: (err: InvalidLoginResponseModel) -> Unit) {
-        println("Attempting to sign in the user")
-        if (storeUserDetails(userDetails.username, userDetails.password, token)) {
-            withContext(Main) {
-                println("calling nav to main loader")
-                navToMainLoader() // go to the main loader activity
+    override fun onSignIn(bundle: Bundle, errorListener: (err: String) -> Unit) {
+        val email = bundle.getString("email") ?: ""
+        val password = bundle.getString("password") ?: ""
+
+        firebaseAuth!!.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    val user = firebaseAuth!!.currentUser
+
+                    showSnackBar("Successfully authenticated as ${user?.displayName}!")
+                    Log.d("SIGNIN", "$email signed in")
+
+                    CoroutineScope(Default).launch {
+                        val user = firebaseAuth!!.currentUser
+                        storeUserDetails(user!!.displayName as String, password)
+                        withContext(Main) {
+                            navToMainLoader() // go to the main loader activity
+                        }
+                    }
+                }
+                else {
+                    Log.d("SIGNIN", "$email failed to sign in")
+                    errorListener(task.exception.toString())
+                }
             }
-        }
-        else {
-            println("error signing in the user")
-            errorListener(InvalidLoginResponseModel(arrayOf("Error storing user details for auto login!")))
-        }
     }
 
     /**
      * Event handler when user presses sign up on login fragment
      */
     override fun onSignUpUser(bundle: Bundle, errorListener: (err: SignUpModel) -> Unit) {
-        CoroutineScope(IO).launch {
-            val model = SignUpModel(bundle.getString("username") ?: "",
-                bundle.getString("password") ?: "",
-                bundle.getString("email") ?: "")
+        val username = bundle.getString("username") ?: ""
+        val email = bundle.getString("email") ?: ""
+        val password = bundle.getString("password") ?: ""
 
-            val url = resources.getString(R.string.sign_up_url)
+        firebaseAuth!!.createUserWithEmailAndPassword(email, password)
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    showSnackBar("Account created!")
 
-            val gson = Gson()
-            val json = gson.toJson(model)
-            println("registering user with json: $json")
-
-            // make the post request with inline listeners
-            Postie().sendPostRequest(applicationContext, url, json,
-                {
-                    val response = gson.fromJson(it.toString(), JsonObject::class.java)
-                    if (response.has("id")) {
-                        showSnackBar("Account created as ${response["username"]}!")
-
-                        CoroutineScope(Main).launch {
-                            storeUserDetails(model.username, model.password)
-                            navToMainLoader() // go to the main loader activity
-                        }
+                    CoroutineScope(Default).launch {
+                        storeUserDetails(username, password)
                     }
-                    else errorListener(gson.fromJson(response, SignUpModel::class.java))
-                },
-                {
-                    Log.e("POST", it.toString())
-                    errorListener(SignUpModel("Error $it", "", ""))
                 }
-            )
-        }
+                else {
+                    Log.e("SIGNUP", task.exception.toString())
+                    errorListener(SignUpModel("", "", "Error ${task.exception.toString()}"))
+                }
+            }
+    }
+
+    private fun verifyEmail() {
+        val user = firebaseAuth!!.currentUser
+        user!!.sendEmailVerification()
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    Log.e("SIGNUP", "Verification email sent to ${user.email}")
+                }
+                else {
+                    Log.e("SIGNUP", "Failed to send verification email to ${user.email}")
+                }
+            }
     }
 
     /**
-     * Store user details in app's private preferences. Don't need a DB as long as we encrypt properly
+     * 1. Store user details in app's private preferences. Don't need a DB as long as we encrypt properly
+     * 2. Set user's display name
      * Password encrypted using assymmetric keys managed by android keystore.
-     * Username and JWT token stored plaintext (not sensitive)
-     * username, password used to get new JWT tokens in subsequent app logins
-     * return whether it was successful or not
      **/
-    private suspend fun storeUserDetails(username: String, password: String, token: String? = null) : Boolean {
+    private suspend fun storeUserDetails(username: String, password: String) : Boolean {
         try {
+            println("trying to store user: $username - $password")
+            /**
+             * Add to shared preferences
+             */
             // use hash of the username and password as an alias for the keystore secret key
             val alias = username.toLowerCase().hashCode().toString()
             val encryptedPassword = UserStorageManager.encrypt(alias, password, this) ?: return false
+            println("Encrypted password: $encryptedPassword")
 
             // store user details to shared preferences
             val sp = getSharedPreferences("Login", MODE_PRIVATE)
@@ -183,10 +170,40 @@ class UserFrontActivity : AppCompatActivity(), RegisterFragment.RegisterUserList
             sp.edit()
                 .putString("username", username)
                 .putString("password", encryptedPassword)
-                .putString("token", token)
                 .commit()
+            println("shared preferences committed")
+
+            /**
+             * Set user display name
+             */
+            val user = firebaseAuth!!.currentUser
+            println("user: $user")
+
+            val profileUpdate = UserProfileChangeRequest.Builder()
+                .setDisplayName(username)
+                .build()
+            println("profile update built")
+
+            user?.updateProfile(profileUpdate)
+                ?.addOnCompleteListener(this) { task ->
+                    if (task.isSuccessful) {
+                        verifyEmail()
+
+                        println("DISPLAY NAME WAS UPDATED IN PROFILE")
+                        Log.d("SIGNUP", "Display name set to $username")
+                        CoroutineScope(Main).launch {
+                            navToMainLoader()
+                        }
+                    }
+                    else {
+                        println("DISPLAY NAME WAS NOT UPDATED IN PROFILE")
+                        Log.d("SIGNUP", "Display name could not be set to $username")
+                    }
+                }
+
             return true
         } catch (ex: Exception) {
+            println("STORE USER DETAILS FAILED!")
             Log.e("SIGNUP", Log.getStackTraceString(ex))
             return false
         }

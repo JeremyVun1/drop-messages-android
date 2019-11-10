@@ -78,6 +78,14 @@
                                 android:layout_height="wrap_content"
                                 android:gravity="left"
                                 android:text="@string/placeholder" />
+
+                            <TextView
+                                android:id="@+id/tv_date"
+                                style="@style/CardMessageSubText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/placeholder"
+                                android:textAlignment="viewEnd" />
                         </LinearLayout>
 
                     </TableRow>
@@ -94,13 +102,6 @@
                             android:layout_weight="0.8"
                             android:text="@string/placeholder" />
 
-                        <TextView
-                            android:id="@+id/tv_date"
-                            style="@style/CardMessageSubText"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/placeholder"
-                            android:textAlignment="viewEnd" />
                     </TableRow>
 
                     <ImageView

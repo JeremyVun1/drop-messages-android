@@ -3,15 +3,16 @@ package com.example.drop_messages_android
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.util.SparseArray
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.drop_messages_android.api.*
+import com.example.drop_messages_android.api.LocationHandler.LocationUpdateListener
 import com.example.drop_messages_android.fragments.DropMessageFragmentListener
 import com.example.drop_messages_android.fragments.MapDropMessageFragment
 import com.google.android.gms.maps.*
@@ -19,11 +20,12 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.snackbar.Snackbar
-import com.google.gson.Gson
-import com.tinder.scarlet.WebSocket
-import io.reactivex.disposables.Disposable
-import kotlinx.android.synthetic.main.activity_drop_messages.*
-import kotlinx.android.synthetic.main.activity_drop_messages.toolbar
+import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import kotlinx.android.synthetic.main.activity_map.*
 import kotlinx.android.synthetic.main.layout_toolbar.*
 import kotlinx.coroutines.CoroutineScope
@@ -33,26 +35,25 @@ import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback, DropMessageFragmentListener {
-
-    private val gson by lazy { Gson() }
+class MapsActivity : AppCompatActivity(), OnMapReadyCallback, DropMessageFragmentListener,
+    LocationUpdateListener {
+    private var locationHandler: LocationHandler? = null
+    private var location: Geolocation? = null
 
     private lateinit var mapFragment: GoogleMap
-    private var locationHandler: LocationHandler? = null
+    private var lastMarkerClicked: String = ""
     private var pickupFragment: MapDropMessageFragment? = null
-    private var lastMarkerClicked: Int = -1
 
-    private lateinit var responseObserver: Disposable
-    private lateinit var initialStubsObserver: Disposable
-    private val socket by lazy { SocketManager.getWebSocket() }
+    private var firebaseDb: FirebaseFirestore? = null
+    private var firebaseAuth: FirebaseAuth? = null
+    private var user: FirebaseUser? = null
+
     private var requesting: Boolean = false
+    private var forceUpdateMap: Boolean = false
 
-    private val userModel by lazy { intent.getParcelableExtra<UserModel>("user") }
-
-    // store our map markers
-    private val markers: SparseArray<Marker> by lazy {
-        SparseArray<Marker>()
-    }
+    // store our map markers and messages
+    private var messages = mutableListOf<DropMessage>()
+    private val markers = mutableMapOf<String, Marker>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,9 +63,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, DropMessageFragmen
         loadToolbarLocationText()
 
         locationHandler = LocationHandler(applicationContext)
+        locationHandler!!.getLastLocation(::onLocationReceived, ::onLocationError)
+
+        firebaseDb = FirebaseFirestore.getInstance()
+        firebaseAuth = FirebaseAuth.getInstance()
+        user = firebaseAuth!!.currentUser
 
         // get google maps
-        val mf = supportFragmentManager.findFragmentById(R.id.google_map_fragment) as SupportMapFragment
+        val mf =
+            supportFragmentManager.findFragmentById(R.id.google_map_fragment) as SupportMapFragment
         mf.getMapAsync(this)
     }
 
@@ -74,98 +81,100 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, DropMessageFragmen
     override fun onResume() {
         super.onResume()
         locationHandler?.connect()
-
-        SocketManager.openSocket()
-        setupSocketListeners()
     }
 
     override fun onPause() {
         super.onPause()
         locationHandler?.disconnect()
-
-        SocketManager.closeSocket()
-        if (::responseObserver.isInitialized)
-            responseObserver.dispose()
-        if (::initialStubsObserver.isInitialized)
-            initialStubsObserver.dispose()
     }
 
     /**
-     * Set up socket listeners for map activity events
+     * Callbacks for Fused location provider
      */
-    private fun setupSocketListeners() {
-        if (!Util.hasInternet(applicationContext))
-            navToNoInternet()
+    override fun onLocationReceived(newLoc: Geolocation) {
+        val currLoc = location
+        println(currLoc)
 
-        if (socket == null) {
-            Log.e("ERROR", "Cannot use a null socket")
-            navToMainLoader()
-        }
-        else {
-            initialStubsObserver = socket!!.observeWebSocketEvent()
-                .filter { it is WebSocket.Event.OnConnectionOpened<*> }
-                .subscribe {
-                    requesting = false
-                    requestMessageStubs()
-                }
+        /**
+         * to conserve data, only populate the map on location updates if,
+         * 1) our geolocation block changed
+         * 2) user pressed refresh button
+         */
+        if (forceUpdateMap || currLoc == null || (currLoc.lat.format(2) != newLoc.lat.format(2) && currLoc.long.format(2) != newLoc.long.format(2))) {
+            location = newLoc
 
-            responseObserver = socket!!.observeSocketResponse()
-                .subscribe {
-                    val category = it.category
-                    val data = it.data
+            if (!Util.hasInternet(applicationContext))
+                navToNoInternet()
 
-                    when (DropResponse.getEnum(category)) {
-                        DropResponse.SOCKET -> handleSocketStatusResponses(data)
-                        DropResponse.ERROR -> handleErrorResponses(data)
-                        DropResponse.NOTIFICATION -> handleNotificationResponses(data)
-                        DropResponse.GEOLOC -> handleGeolocResponse(data)
+            showSnackBar("Geolocation block changed to: ${newLoc.formattedString()}")
+            loadToolbarLocationText()
 
-                        DropResponse.SINGLE -> handleGetSingleResponse(data)
-                        DropResponse.STUBS -> handleGetStubsResponse(data)
-                        DropResponse.UNKNOWN -> Log.e("ERROR", "Unknown server response category")
+            buildQuery().get()
+                .addOnSuccessListener { documents ->
+                    CoroutineScope(Default).launch {
+                        messages.clear()
+
+                        for (doc in documents) {
+                            val model = DropMessage(
+                                id = doc.data["id"] as String,
+                                lat = doc.data["lat"] as Double,
+                                long = doc.data["long"] as Double,
+                                lat_block = doc.data["lat_block"] as Double,
+                                long_block = doc.data["long_block"] as Double,
+                                message = doc.data["message"] as String,
+                                date = doc.data["date"] as Timestamp,
+                                seen = (doc.data["seen"] as Long).toInt(),
+                                votes = (doc.data["votes"] as Long).toInt(),
+                                author = doc.data["author"] as String
+                            )
+                            messages.add(model)
+                        }
+
+                        populateMap(messages)
                     }
                 }
-        }
+                .addOnFailureListener {
+                    Log.e("MESSAGE", "Map activity could not retrieve messages")
+                }
+        } else location = newLoc
+
+        requesting = false
+        forceUpdateMap = false
     }
 
-    /**
-     * Handlers for socket responses from server
-     */
-    private fun handleGeolocResponse(data: String) {
-        val response = gson.fromJson(data, GeolocationResponse::class.java)
+    private fun onLocationError(ex: Exception) {
+        Log.e("ERROR", ex.toString())
+        Toast.makeText(applicationContext, "Google play services error!", Toast.LENGTH_SHORT).show()
+        finish()
+    }
 
-        if (response.result) {
-            val currLoc = userModel!!.location
+    private fun buildQuery(): Query {
+        return firebaseDb!!.collection("messages")
+            .whereEqualTo("lat_block", location!!.lat.round(2))
+            .whereEqualTo("long_block", location!!.long.round(2))
+            .whereGreaterThan("votes", -6)
+    }
 
-            if (currLoc!!.lat.round(2) != response.lat.toDouble().round(2)) {
-                //our geolocation block has changed
-                userModel!!.location = Geolocation(response.lat.toDouble(), response.long.toDouble())
-                loadToolbarLocationText()
+    private fun populateMap(messages: List<DropMessage>) {
+        if (!::mapFragment.isInitialized)
+            return
+
+        CoroutineScope(Main).launch {
+            mapFragment.clear()
+            markers.clear()
+
+            for (m in messages) {
+                val marker = mapFragment.addMarker(
+                    MarkerOptions()
+                        .position(LatLng(m.lat, m.long))
+                        .title(m.author)
+                )
+                marker.tag = m.id
+                markers[m.id] = marker
             }
 
-            // request message stubs for new geolocation block
-            requestMessageStubs()
-        } else requesting = false
-    }
-
-    private fun handleGetSingleResponse(data: String) {
-        val response = gson.fromJson(data, DropMessage::class.java)
-
-        // add new fragment if none exists, else replace the one we already have
-        // No need to recreate a fragment and replace it if one already exists
-        // make sure we are in the UI thread
-        CoroutineScope(Main).launch {
-            if (pickupFragment == null) {
-                val newFrag = createMapDropMessageFragment(response)
-                pickupFragment = newFrag as MapDropMessageFragment
-
-                supportFragmentManager.beginTransaction()
-                    .add(R.id.map_pickup_container, newFrag, "map_pickup_fragment")
-                    .commit()
-            } else pickupFragment!!.loadModel(response)
-
-            requesting = false
-            openPickupContainer()
+            val focus = LatLng(location!!.lat, location!!.long)
+            mapFragment.moveCamera(CameraUpdateFactory.newLatLngZoom(focus, Util.DEFAULT_MAP_ZOOM))
         }
     }
 
@@ -185,81 +194,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, DropMessageFragmen
         }
     }
 
-    private fun handleGetStubsResponse(data: String) {
-        if (!::mapFragment.isInitialized)
-            return
-
-        val response = gson.fromJson(data, Array<DropMessageStub>::class.java)
-
-        val location = userModel!!.location
-        if (location == null) {
-            val errString = "Need to be on a geolocation block to use the map activity"
-            Log.e("ERROR", errString)
-            Toast.makeText(applicationContext, errString, Toast.LENGTH_SHORT).show()
-            navToMainLoader()
-        }
-
-        CoroutineScope(Main).launch {
-            mapFragment.clear()
-            markers.clear()
-
-            for (stub in response) {
-                val marker = mapFragment.addMarker(
-                    MarkerOptions()
-                        .position(LatLng(stub.lat.toDouble(), stub.long.toDouble()))
-                        .title(stub.author)
-                )
-                marker.tag = stub.id
-                markers.put(stub.id.toInt(), marker)
-            }
-
-            val focus = LatLng(location!!.lat, location.long)
-            mapFragment.moveCamera(CameraUpdateFactory.newLatLngZoom(focus, Util.DEFAULT_MAP_ZOOM))
-        }
-
-        requesting = false
-    }
-
-    private fun handleSocketStatusResponses(data: String) {
-        Log.d("DEBUG", data)
-    }
-
-    private fun handleErrorResponses(data: String) {
-        Log.e("ERROR", data)
-    }
-
-    private fun handleNotificationResponses(data: String) {
-        if (!::mapFragment.isInitialized)
-            return
-
-        val response = gson.fromJson(data, DropMessage::class.java)
-        Log.d("DEBUG", data)
-
-        // create a marker titled with author name, and tag it with msg id
-        val loc = LatLng(response.lat.toDouble(), response.long.toDouble())
-        mapFragment.addMarker(
-            MarkerOptions()
-                .position(loc)
-                .title(response.author)
-        ).tag = response.id
-
-        showSnackbarWithJump("You picked up a drop!", loc)
-    }
-
-    private fun requestMessageStubs() {
-        if (!requesting) {
-            socket!!.requestStubs(RequestStubs(DropRequest.GET_STUBS.value))
-            requesting = true
-        }
-    }
-
     /**
      * Drop message fragment stuff
      */
     private fun createMapDropMessageFragment(model: DropMessage): Fragment {
         val b = Bundle()
         b.putParcelable("model", model)
-        b.putBoolean("canDelete", model.author == userModel!!.username)
+        b.putBoolean("canDelete", model.author == user!!.displayName)
 
         val result = MapDropMessageFragment()
         result.arguments = b
@@ -267,32 +208,34 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, DropMessageFragmen
         return result
     }
 
+
     /**
      * Drop message fragment listeners
      */
-    override fun onUpvote(id: Int?) {
+    override fun onUpvote(id: String?) {
         if (id != null) {
-            println("upvoting msg: $id")
-            socket!!.upvote(Upvote(DropRequest.UPVOTE.value, id.toString()))
+            firebaseDb!!.collection("messages").document(id)
+                .update("votes", FieldValue.increment(1))
         }
     }
 
-    override fun onDownvote(id: Int?) {
+    override fun onDownvote(id: String?) {
         if (id != null) {
-            println("downvoting msg: $id")
-            socket!!.downvote(Downvote(DropRequest.DOWNVOTE.value, id.toString()))
+            firebaseDb!!.collection("messages").document(id)
+                .update("votes", FieldValue.increment(-1))
         }
     }
 
-    override fun onDelete(id: Int?) {
+    override fun onDelete(id: String?) {
         if (id != null) {
-            socket!!.delete(Delete(DropRequest.DELETE.value, id.toString()))
-
             val marker = markers[id]
             if (marker != null) {
                 marker.remove()
                 markers.remove(id)
             }
+
+            firebaseDb!!.collection("messages").document(id).delete()
+            messages.removeIf { m -> m.id == id }
 
             closePickupContainer()
         }
@@ -305,54 +248,33 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, DropMessageFragmen
         mapFragment = map
 
         // clicking a marker will request the full msg from the server
-        mapFragment.setOnMarkerClickListener {marker ->
-            val id = (marker.tag as String).toInt()
+        mapFragment.setOnMarkerClickListener { marker ->
+            val id = marker.tag as String
             if (lastMarkerClicked == id) {
-                println("closing info window")
                 marker.hideInfoWindow()
                 closePickupContainer()
+                lastMarkerClicked = ""
             } else {
                 lastMarkerClicked = id
                 marker.showInfoWindow()
-                socket!!.requestSingle(RequestSingle(data=marker.tag as String))
+
+                // find the message and open it in popup container view
+                val model = messages.find { m -> m.id == id }
+
+                if (model != null) {
+                    if (pickupFragment == null) {
+                        val newFrag = createMapDropMessageFragment(model)
+                        pickupFragment = newFrag as MapDropMessageFragment
+
+                        supportFragmentManager.beginTransaction()
+                            .add(R.id.map_pickup_container, newFrag, "map_pickup_fragment")
+                            .commit()
+                    } else pickupFragment!!.loadModel(model)
+                    openPickupContainer()
+                }
             }
             true
         }
-    }
-
-    /**
-     * Snackbar to jump to a notification
-     */
-    private fun showSnackbarWithJump(text: String, loc: LatLng) {
-        if (!::mapFragment.isInitialized)
-            return
-
-        val snack = Snackbar.make(root_container, text, Snackbar.LENGTH_LONG)
-
-        snack.setAction("View it!") {
-            mapFragment.moveCamera(CameraUpdateFactory.newLatLngZoom(loc, Util.DEFAULT_MAP_ZOOM))
-        }
-    }
-
-    /**
-     * Callbacks for Fused location provider
-     */
-    private fun onLocationReceived(location: Geolocation) {
-        socket!!.changeGeolocation(
-            ChangeGeolocation(
-                DropRequest.CHANGE_LOC.value,
-                location.lat.toFloat(),
-                location.long.toFloat()
-            )
-        )
-
-        requesting = false
-    }
-
-    private fun onLocationError(ex: Exception) {
-        Log.e("ERROR", ex.toString())
-        Toast.makeText(applicationContext, "Google play services error!", Toast.LENGTH_SHORT).show()
-        finish()
     }
 
     /**
@@ -364,10 +286,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, DropMessageFragmen
     }
 
     private suspend fun navToMainLoaderAsync() {
-        withContext(Dispatchers.Main) {
+        withContext(Main) {
             navToMainLoader()
         }
     }
+
     private fun navToMainLoader() {
         val i = Intent(applicationContext, MainLoaderActivity::class.java)
         startActivity(i)
@@ -379,6 +302,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, DropMessageFragmen
             // clear user details from shared preferences
             val sp = getSharedPreferences("Login", MODE_PRIVATE)
             sp.edit().clear().commit()
+            firebaseAuth!!.signOut()
 
             // nav to user front
             navToMainLoaderAsync()
@@ -386,8 +310,24 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, DropMessageFragmen
     }
 
     private fun changeLocation() {
-        locationHandler!!.connect()
-        locationHandler!!.getLastLocation(::onLocationReceived, ::onLocationError)
+        if (!requesting) {
+            forceUpdateMap = true
+            locationHandler!!.connect()
+            locationHandler!!.getLastLocation(::onLocationReceived, ::onLocationError)
+        }
+    }
+
+    /**
+     * show snackbar with message
+     */
+    private fun showSnackBar(text: String) {
+        val snack = Snackbar.make(root_container, text, Snackbar.LENGTH_LONG)
+        snack.setAction("OK") { }
+
+        val actionColor = ContextCompat.getColor(applicationContext, R.color.colorAccent)
+        val textColor = ContextCompat.getColor(applicationContext, R.color.colorLightHint)
+
+        snack.setActionTextColor(actionColor).setTextColor(textColor).show()
     }
 
     /**
@@ -395,8 +335,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, DropMessageFragmen
      */
     private fun loadToolbarLocationText() {
         CoroutineScope(Main).launch {
-            val lat = userModel?.location?.lat
-            val long = userModel?.location?.long
+            val lat = location?.lat
+            val long = location?.long
 
             val toolbarLocText = "(${lat?.format(2)}, ${long?.format(2)})"
             tv_toolbar_geolocation.text = toolbarLocText

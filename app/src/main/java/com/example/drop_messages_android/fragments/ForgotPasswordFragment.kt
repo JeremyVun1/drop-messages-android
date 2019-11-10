@@ -3,20 +3,22 @@ package com.example.drop_messages_android.fragments
 
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.LinearInterpolator
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.drop_messages_android.R
 import com.example.drop_messages_android.ValidatorHelper
-import com.example.drop_messages_android.api.InvalidLoginResponseModel
-import kotlinx.android.synthetic.main.card_login_fragment.*
-import kotlinx.android.synthetic.main.card_login_fragment.view.*
+import kotlinx.android.synthetic.main.card_forgot_password.*
+import kotlinx.android.synthetic.main.card_forgot_password.view.*
 
-class LoginFragment : Fragment() {
-    var whiteBoxAnimator : ObjectAnimator? = null
+class ForgotPasswordFragment : Fragment() {
+    private var whiteBoxAnimator : ObjectAnimator? = null
+    private var parent: Context? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -24,20 +26,12 @@ class LoginFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
 
-        val rootView = inflater.inflate(R.layout.card_login_fragment, container, false) as ViewGroup
-        val listener = activity as LoginUserListener
+        val rootView = inflater.inflate(R.layout.card_forgot_password, container, false) as ViewGroup
+        val listener = activity as SendPasswordResetListener
 
-        // Signup button
-        rootView.btn_signup.setOnClickListener {
-            println("sign up listener called!")
-            listener.navToSignUp()
-        }
-
-        // signin button
-        rootView.btn_signin.setOnClickListener {
-            val email = tv_input_email.editText!!.text.toString()
-            val password = tv_input_password.editText!!.text.toString()
-
+        // send password reset
+        rootView.btn_send_password_reset.setOnClickListener {
+            val email = tv_input_email.editText?.text.toString()
             var validated = true
 
             // email validation
@@ -52,39 +46,30 @@ class LoginFragment : Fragment() {
                 validated = false
             }
 
-            //password validation
-            if (password.isBlank()) {
-                tv_input_password.error = "Must not be blank"
-                tv_input_password.requestFocus()
-                validated = false
-            }
-            if (!ValidatorHelper.isValidPassword(password)) {
-                tv_input_password.error = "must be 8 or more chars"
-                tv_input_password.requestFocus()
-                validated = false
-            }
-
             //fields are validated
             if (validated) {
                 val b = Bundle()
                 b.putString("email", email)
-                b.putString("password", password)
 
                 startProgressBar()
-                listener.onSignIn(b, ::errorListener)
+                listener.onSendPasswordReset(b, ::successListener, ::errorListener)
             }
         }
 
-        rootView.btn_forgot_pw.setOnClickListener {
-            listener.onForgotPassword()
-        }
+        rootView.tv_card_label.text = "PASSWORD RECOVERY)"
 
         return rootView
     }
 
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+
+        parent = context
+    }
+
     private fun startProgressBar() {
         progress_container.visibility= View.VISIBLE
-        btn_signin.visibility = View.GONE
+        btn_send_password_reset.visibility = View.GONE
 
         //loading animation for Loading text dots
         var slideX = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, 0f, 90f)
@@ -99,7 +84,7 @@ class LoginFragment : Fragment() {
 
     private fun stopProgressBar() {
         progress_container.visibility= View.GONE
-        btn_signin.visibility = View.VISIBLE
+        btn_send_password_reset.visibility = View.VISIBLE
         if (whiteBoxAnimator != null)
             whiteBoxAnimator!!.end()
     }
@@ -107,16 +92,19 @@ class LoginFragment : Fragment() {
     // error listener for invalid sign in e.g. invalid username/password
     // callback for userfront activity
     fun errorListener(error: String) {
-        tv_signup_error.text = error
+        tv_send_password_reset_output.text = error
+        tv_send_password_reset_output.setTextColor(ContextCompat.getColor(parent!!, R.color.colorError))
 
         // reset UI back
         stopProgressBar()
-        btn_signin.visibility = View.VISIBLE
     }
 
-    interface LoginUserListener {
-        fun onSignIn(bundle: Bundle, errorListener: (err: String) -> Unit)
-        fun navToSignUp()
-        fun onForgotPassword()
+    fun successListener() {
+        tv_send_password_reset_output.text = "Password reset email sent!"
+        tv_send_password_reset_output.setTextColor(ContextCompat.getColor(parent!!, R.color.colorSuccess))
+    }
+
+    interface SendPasswordResetListener {
+        fun onSendPasswordReset(bundle: Bundle, succListener: () -> Unit, errListener: (err: String) -> Unit)
     }
 }

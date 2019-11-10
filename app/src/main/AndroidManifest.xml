@@ -20,9 +20,10 @@
         </activity>
 
         <!-- Sign up, sign in, index -->
-        <activity android:name=".UserFrontActivity">
+        <activity android:name=".UserFrontActivity"></activity>
 
-        </activity>
+        <!-- Forgot password recovery activity -->
+        <activity android:name=".ForgotPasswordActivity"></activity>
 
         <!-- The main user activity where they can do the stuff -->
         <activity android:name=".DropMessagesActivity">

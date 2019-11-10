@@ -17,7 +17,7 @@ import kotlinx.android.synthetic.main.card_register_fragment.*
 import kotlinx.android.synthetic.main.card_register_fragment.btn_signin
 import kotlinx.android.synthetic.main.card_register_fragment.progress_container
 import kotlinx.android.synthetic.main.card_register_fragment.tv_input_password
-import kotlinx.android.synthetic.main.card_register_fragment.tv_input_username
+import kotlinx.android.synthetic.main.card_register_fragment.tv_input_email
 import kotlinx.android.synthetic.main.card_register_fragment.view.*
 
 class RegisterFragment : Fragment() {
@@ -50,22 +50,27 @@ class RegisterFragment : Fragment() {
             //validate fields with ugly code
             if (username.isBlank()) {
                 tv_input_username.error = "Must not be blank"
+                tv_input_username.requestFocus()
                 validated = false
             }
             if (password.isBlank()) {
                 tv_input_password.error = "Must not be blank"
+                tv_input_password.requestFocus()
                 validated = false
             }
             if (email.isBlank()) {
                 tv_input_email.error = "Must not be blank"
+                tv_input_email.requestFocus()
                 validated = false
             }
             if (!ValidatorHelper.isValidEmail(email)) {
                 tv_input_email.error = "Invalid Email"
+                tv_input_email.requestFocus()
                 validated = false
             }
             if (!ValidatorHelper.isValidPassword(password)) {
                 tv_input_password.error = "must be 8 or more chars"
+                tv_input_password.requestFocus()
                 validated = false
             }
 
@@ -114,11 +119,11 @@ class RegisterFragment : Fragment() {
     // callback for user front activity
     fun errorListener(response: SignUpModel) {
         if (response.username.isNotEmpty())
-            tv_input_username.editText!!.error = response.username
+            tv_input_email.editText!!.error = response.username
         if (response.password.isNotEmpty())
-            tv_input_username.editText!!.error = response.password
+            tv_input_email.editText!!.error = response.password
         if (response.email.isNotEmpty())
-            tv_input_username.editText!!.error = response.email
+            tv_input_email.editText!!.error = response.email
 
 
         // Reset UI

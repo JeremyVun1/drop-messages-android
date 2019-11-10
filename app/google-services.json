@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "333009484320-cgm4mjqgt26gqk4vsirnv1ebagi7u7lk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.drop_messages_android",
+            "certificate_hash": "c9ea6e9698b3e2ba3c4572f2f13754c4eec04965"
+          }
+        },
+        {
           "client_id": "333009484320-at78emrfdbfq9mberc714916h083mmet.apps.googleusercontent.com",
           "client_type": 3
         }

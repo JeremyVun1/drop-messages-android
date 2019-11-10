@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:animateLayoutChanges="true"
     android:orientation="vertical"
-    android:weightSum="100"
-    android:animateLayoutChanges="true">
+    android:weightSum="100">
 
     <include
         android:id="@+id/toolbar"
@@ -15,7 +16,7 @@
         android:id="@+id/map_fragment_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="35"
+        android:layout_weight="40"
         android:orientation="horizontal"
         android:visibility="visible">
 
@@ -31,7 +32,7 @@
         android:id="@+id/map_pickup_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="65"
+        android:layout_weight="60"
         android:elevation="10dp"
         android:orientation="horizontal"
         android:visibility="gone">
