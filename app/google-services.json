@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "333009484320",
+    "firebase_url": "https://drop-messages-1572362017268.firebaseio.com",
+    "project_id": "drop-messages-1572362017268",
+    "storage_bucket": "drop-messages-1572362017268.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:333009484320:android:8da492b42d3316b3ee1a45",
+        "android_client_info": {
+          "package_name": "com.example.drop_messages_android"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "333009484320-at78emrfdbfq9mberc714916h083mmet.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBHycEsMHRKrDiowJ0qn4n9Cac0N-OGyfo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "333009484320-at78emrfdbfq9mberc714916h083mmet.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
