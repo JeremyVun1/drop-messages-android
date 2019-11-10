@@ -21,7 +21,7 @@ object Util {
     val MAX_MESSAGE_LENGTH by lazy { 240 }
     val INTERVAL by lazy { 30000L }
     val FASTEST_INTERVAL by lazy { 20000L }
-    val DEFAULT_MAP_ZOOM by lazy { 17f }
+    val DEFAULT_MAP_ZOOM by lazy { 16f }
     val PAGE_SIZE by lazy { 10 }
 
     /**
